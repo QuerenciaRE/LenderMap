@@ -1,8 +1,14 @@
-# CRE Lender Finder
+# LenderMap — CRE Lender Finder
 
 Free, static website that ranks banks and credit unions near a property address by their likelihood of lending on
 commercial real estate, built entirely from public regulatory filings (FDIC Call Reports and Summary of Deposits,
 NCUA 5300 Call Reports and branch files, FRED). No server, no database, no API keys.
+
+## Working on this repo with Claude Code
+
+Open the repo in Claude Code on the web (claude.ai/code); it reads `CLAUDE.md` automatically and `docs/HANDOFF.md`
+has the full context. Ask for changes in plain language, click **Create PR**, merge on GitHub, and the Action rebuilds
+and redeploys the site by itself (about 15 minutes).
 
 ## One-time setup (about 15 minutes, no coding)
 
@@ -17,7 +23,7 @@ NCUA 5300 Call Reports and branch files, FRED). No server, no database, no API k
    The first run downloads ~0.6 GB of call reports and takes 20–40 minutes. When it turns green, the site is live at
    `https://<your-username>.github.io/cre-lender-finder/`.
 
-After that the workflow runs by itself on the 1st and 15th of every month and republishes with the newest quarter
+After that the workflow runs by itself whenever `main` changes and on the 1st and 15th of every month and republishes with the newest quarter
 automatically (bank and credit-union call reports appear about 60 days after each quarter end; branch deposits once a
 year in late September). Nothing else to maintain.
 

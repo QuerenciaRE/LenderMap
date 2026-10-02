@@ -4,7 +4,10 @@ D = os.path.join(os.path.dirname(__file__), '..', 'data'); FRED = os.path.join(o
 
 def macro():
     def q(series, how='mean'):
-        s = pd.read_csv(f'{FRED}/{series}.csv', parse_dates=['observation_date']).set_index('observation_date').iloc[:, 0]
+        try:
+            s = pd.read_csv(f'{FRED}/{series}.csv', parse_dates=['observation_date']).set_index('observation_date').iloc[:, 0]
+        except Exception as e:                      # a missing or malformed FRED file must not stop the build
+            print('macro series unavailable:', series, e); return pd.Series(dtype=float)
         s = pd.to_numeric(s, errors='coerce').dropna()
         return s.resample('QE').mean() if how == 'mean' else s.resample('QE').last()
     M = pd.DataFrame({'fedfunds': q('DFF'), 'sofr': q('SOFR'), 'dgs2': q('DGS2'), 'dgs5': q('DGS5'), 'dgs10': q('DGS10'),
