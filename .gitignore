@@ -1,0 +1,10 @@
+raw/
+data/
+site/data/
+site/artifact.html
+test/node_modules/
+test/*.png
+test/package*.json
+__pycache__/
+*.pyc
+.DS_Store
