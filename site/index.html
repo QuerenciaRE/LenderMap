@@ -24,6 +24,11 @@
     </section>
 
     <section>
+      <label class="lbl">Find a lender</label>
+      <div class="lsearch"><input id="lname" type="text" placeholder="Name, e.g. TDECU or First Eagle Bank" autocomplete="off"><div id="lsugg" class="hidden"></div></div>
+    </section>
+
+    <section>
       <label class="lbl">Lender geography</label>
       <label class="radio"><input type="radio" name="mode" value="hq" checked> HQ within <input id="r-hq" type="number" value="10" min="1" max="500" class="num"> mi</label>
       <label class="radio"><input type="radio" name="mode" value="state"> HQ in the property's state (or within <input id="r-hq2" type="number" value="100" min="0" max="1000" class="num"> mi) <em>and</em> a branch within <input id="r-br" type="number" value="5" min="1" max="200" class="num"> mi</label>

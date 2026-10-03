@@ -99,12 +99,22 @@ async function geocodeZip(q) {
   const z = (await zipTable())[m[1]]; if (!z) return null;
   return { lat: z[0], lon: z[1], st: await stateAt(z[0], z[1]), label: `ZIP ${m[1]} (center of ZIP area)` };
 }
+function queryState(q) { // state named at the end of the query: "..., TX" / "... Texas 77995"
+  const t = q.replace(/\b\d{5}(-\d{4})?\b/g, '').replace(/[.,]+\s*$/, '').trim(), m = t.match(/(?:,|\s)\s*([A-Za-z]{2})$/);
+  if (m && STATES[m[1].toUpperCase()]) return m[1].toUpperCase();
+  const low = t.toLowerCase(); for (const [name, st] of Object.entries(NAME2ST)) if (low.endsWith(name)) return st;
+  return null;
+}
 async function geocode(q) {
   if (CFG.offline) return geocodeZip(q);
   const zipHit = await geocodeZip(q).catch(() => null);
   try {
-    const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en`).then(r => r.json());
-    const f = (r.features || []).find(f => (f.properties.countrycode || '').toUpperCase() === 'US' || f.properties.country === 'United States');
+    const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en`).then(r => r.json());
+    // Photon often ranks a same-named county or creek first ("Yoakum, TX" -> Yoakum County, 400 mi away):
+    // keep Photon's order but push counties, states, creeks etc. and hits outside the state named in the query to the back
+    const qst = queryState(q), us = (r.features || []).filter(f => (f.properties.countrycode || '').toUpperCase() === 'US' || f.properties.country === 'United States');
+    const rank = f => { const p = f.properties, st = NAME2ST[(p.state || '').toLowerCase()]; return (qst && st !== qst ? 2 : 0) + (p.type === 'county' || p.type === 'state' || ['waterway', 'natural', 'boundary'].includes(p.osm_key) ? 1 : 0); };
+    const f = us.map((f, i) => [rank(f) * 100 + i, f]).sort((a, b) => a[0] - b[0]).map(x => x[1])[0];
     if (f) { const p = f.properties, st = NAME2ST[(p.state || '').toLowerCase()] || null; return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], st, label: [p.name, p.housenumber && p.street ? `${p.housenumber} ${p.street}` : p.street, p.city || p.county, p.state, p.postcode].filter(Boolean).join(', ') }; }
   } catch (e) { console.warn('photon failed', e); }
   try {
@@ -332,6 +342,52 @@ $('btn-about').onclick = e => { e.preventDefault(); showModal(`<h2>About</h2><p>
 <dt>Method notes</dt><dd>A panel of ${(430927).toLocaleString()} lender-quarters (2016-2026) was used to test which current metrics predict the next four quarters of CRE growth. The strongest, in order: trailing CRE growth, CRE share of loans, CRE and construction as % of capital, size, deposit growth; non-performing loans reduce it. Capital headroom only matters at the extremes. Those findings set the default weights and penalties; weights are adjustable.</dd></dl>`); };
 $('modal-close').onclick = () => $('modal').classList.add('hidden'); $('modal').onclick = e => { if (e.target.id === 'modal') $('modal').classList.add('hidden'); };
 $('drawer-close').onclick = () => $('drawer').classList.add('hidden'); $('drawer').onclick = e => { if (e.target.id === 'drawer') $('drawer').classList.add('hidden'); };
+
+/* ---------------- lender name search ---------------- */
+// NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU
+const NORM = s => (s || '').toUpperCase().replace(/&/g, ' AND ').replace(/[^A-Z0-9]+/g, ' ').trim();
+const CU_WORDS = new Set(['CREDIT', 'UNION', 'CU', 'FCU', 'FEDERAL']), SKIP = new Set(['THE', 'OF', 'AND']);
+function nameIndex() {
+  if (S.nameIdx) return S.nameIdx;
+  S.nameIdx = S.lenders.map(l => {
+    const words = NORM(l.n).split(' ').filter(Boolean), acr = words.filter(w => !SKIP.has(w)).map(w => w[0]).join('');
+    const keys = l.c === 'C' ? [acr, acr + 'CU', acr + 'FCU'] : [acr, acr + 'B'];
+    return { l, words, flat: words.join(''), keys };
+  });
+  return S.nameIdx;
+}
+function findLenders(q) {
+  const qn = NORM(q), flat = qn.replace(/ /g, ''), toks = qn.split(' ').filter(Boolean); if (!flat) return [];
+  const hits = [];
+  for (const e of nameIndex()) {
+    let s = null;
+    if (e.flat === flat) s = 0;
+    else if (flat.length >= 2 && e.keys.includes(flat)) s = 1;
+    else if (e.flat.startsWith(flat)) s = 2;
+    else if (toks.every(t => e.words.some(w => w.startsWith(t)) || (e.l.c === 'C' && CU_WORDS.has(t)) || (e.l.c === 'B' && t === 'BANK'))
+      && toks.some(t => e.words.some(w => w.startsWith(t)))) s = 3;
+    if (s != null) hits.push([s, e.l]);
+  }
+  return hits.sort((a, b) => a[0] - b[0] || (b[1].ast || 0) - (a[1].ast || 0)).slice(0, 12).map(h => h[1]);
+}
+function showSuggest() {
+  const q = $('lname').value, box = $('lsugg');
+  if (!q.trim() || !S.lenders.length) { box.classList.add('hidden'); return; }
+  S.lhits = findLenders(q); S.lsel = 0;
+  box.innerHTML = S.lhits.length ? S.lhits.map((l, i) => `<div class="opt${i ? '' : ' on'}" data-id="${l.id}"><span class="badge ${l.c}">${l.c === 'B' ? 'Bank' : 'CU'}</span> ${esc(l.n)} <span class="tier t${l.tier}">${l.tier}</span><span class="dim">${esc(l.ci)}, ${l.st} · $${fmtM(l.ast, 0)}M assets · ${l.nb} offices</span></div>`).join('') : '<div class="none">No lender matches that name.</div>';
+  box.classList.remove('hidden');
+}
+function pickLender(id) { $('lsugg').classList.add('hidden'); $('lname').value = S.byId[id].n; openLender(id); }
+$('lname').addEventListener('input', showSuggest);
+$('lname').addEventListener('focus', showSuggest);
+$('lname').addEventListener('keydown', e => {
+  const opts = [...$('lsugg').querySelectorAll('.opt')];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!opts.length) return; S.lsel = (S.lsel + (e.key === 'ArrowDown' ? 1 : opts.length - 1)) % opts.length; opts.forEach((o, i) => o.classList.toggle('on', i === S.lsel)); opts[S.lsel].scrollIntoView({ block: 'nearest' }); }
+  else if (e.key === 'Enter' && opts.length) pickLender(opts[S.lsel].dataset.id);
+  else if (e.key === 'Escape') $('lsugg').classList.add('hidden');
+});
+$('lsugg').addEventListener('mousedown', e => { const o = e.target.closest('.opt'); if (o) { e.preventDefault(); pickLender(o.dataset.id); } });
+$('lname').addEventListener('blur', () => $('lsugg').classList.add('hidden'));
 
 /* ---------------- wiring ---------------- */
 $('go').onclick = search; $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });

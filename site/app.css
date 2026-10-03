@@ -97,3 +97,12 @@ dl.defs dt { font-weight: 600; margin-top: 10px; } dl.defs dd { margin: 2px 0 0 
   #layout { flex-direction: column; } aside#controls { width: auto; border-right: none; border-bottom: 1px solid var(--line); }
   #map { height: 320px; } header .macro { display: none; }
 }
+.lsearch { position: relative; }
+.lsearch input { width: 100%; box-sizing: border-box; }
+#lsugg { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.12); max-height: 340px; overflow-y: auto; }
+#lsugg.hidden { display: none; }
+#lsugg .opt { padding: 6px 8px; cursor: pointer; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+#lsugg .opt:last-child { border-bottom: none; }
+#lsugg .opt.on, #lsugg .opt:hover { background: #eef3fb; }
+#lsugg .opt .dim { display: block; font-size: 11px; }
+#lsugg .none { padding: 6px 8px; color: var(--muted); font-size: 12px; }
