@@ -40,6 +40,8 @@ jobs:
         run: bash scripts/run_all.sh
       - name: Drop files not needed for hosting
         run: rm -rf site/data/history_state site/artifact.html
+      - name: Stamp app.js / app.css with the commit so browsers fetch the new version after each deploy
+        run: sed -i "s/app.js\"/app.js?v=${GITHUB_SHA::8}\"/; s/app.css\"/app.css?v=${GITHUB_SHA::8}\"/" site/index.html
       - uses: actions/configure-pages@v5
         with:
           enablement: true
