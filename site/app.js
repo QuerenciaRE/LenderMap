@@ -60,7 +60,7 @@ async function load() {
   $('macro-line').textContent = `${macro.q[i]} avg: Fed funds ${macro.fedfunds[i]}% · SOFR ${macro.sofr[i]}% · 5y ${macro.dgs5[i]}% · 10y ${macro.dgs10[i]}% · banks tightening CRE standards (net %): ${macro.sloos_cre_tight[i]}`;
   $('built').textContent = `Data built ${meta.built}.`;
   if (CFG.offline) { $('csv').style.display = 'none'; $('addr').placeholder = 'ZIP code, e.g. 60606 — or click the map'; $('addr-result').textContent = 'Preview build: enter a 5-digit ZIP or click the map to drop a pin. The hosted site accepts full street addresses and shows a street basemap.'; }
-  else $('addr-result').textContent = 'Or click anywhere on the map to drop a pin.';
+  else $('addr-result').textContent = 'Street address, city and state, or a ZIP code. After a search you can also click the map to drop a pin.';
   rescoreAll();
   const q = new URLSearchParams(location.search).get('q'); if (q) { $('addr').value = q; search(); }
 }
@@ -174,7 +174,7 @@ async function run() {
     out.push(Object.assign({}, l, { dist: d, nbr: nb ? nb.n : 0, brdist: nb ? nb.min : null }));
   }
   S.results = out; S.rBr = brR; S.mode = mode; S.rHq = rHq;
-  renderTable(); renderMap();
+  renderResults();
   const nB = out.filter(r => r.c === 'B').length, nC = out.length - nB;
   $('summary').innerHTML = `<b>${out.length}</b> lenders (${nB} banks, ${nC} credit unions) · ${mode === 'hq' ? `HQ within ${rHq} mi` : `HQ in ${S.st || 'state'}${rHq2 != null ? ` or within ${rHq2} mi` : ''}, branch within ${rBr} mi`}${amtM ? ` · can lend $${amtM.toFixed(1)}M` : ''} · ${occ === 'inv' ? 'investment' : 'owner-occupied'} scoring`;
   $('csv').disabled = !out.length;
@@ -182,10 +182,11 @@ async function run() {
 
 /* ---------------- table ---------------- */
 function visibleCols() { const occ = $('occ').value; return COLS.filter(c => !c.occ || c.occ === occ); }
+function displayCols() { const c = visibleCols(); return [...c.filter(x => x.k === 'n'), ...c.filter(x => x.k !== 'n')]; }   // lender name leads on screen; CSV keeps COLS order
 function renderTable() {
-  const cols = visibleCols(), { key, dir } = S.sort;
+  const cols = displayCols(), { key, dir } = S.sort;
   const rows = S.results.slice().sort((a, b) => { const x = a[key], y = b[key]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * dir; });
-  $('tbl').querySelector('thead').innerHTML = '<tr>' + cols.map(c => `<th class="${c.cls || ''} ${c.k === key ? 'sorted' + (dir > 0 ? ' asc' : '') : ''}" data-k="${c.k}" title="${esc(c.t)}">${c.l}</th>`).join('') + '</tr>';
+  $('tbl').querySelector('thead').innerHTML = '<tr>' + cols.map(c => `<th class="${c.cls || ''}" data-k="${c.k}" title="${esc(c.t)}" tabindex="0"${c.k === key ? ` aria-sort="${dir > 0 ? 'ascending' : 'descending'}"` : ''}>${c.l}${c.k === key ? `<span class="sortlbl">${dir > 0 ? 'low first' : 'high first'}</span>` : ''}</th>`).join('') + '</tr>';
   $('tbl').querySelector('tbody').innerHTML = rows.map(r => '<tr data-id="' + r.id + '">' + cols.map(c => `<td class="${c.cls || ''}">${c.f(r)}</td>`).join('') + '</tr>').join('');
 }
 $('tbl').addEventListener('click', e => {
@@ -193,13 +194,27 @@ $('tbl').addEventListener('click', e => {
   const td = e.target.closest('td.name'); if (td) openLender(td.parentElement.dataset.id);
 });
 
+$('tbl').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('th')) e.target.click(); });
+
+/* ---------------- page state: landing vs results ---------------- */
+function enterResults() {
+  if (document.body.classList.contains('results')) return;
+  document.body.classList.replace('landing', 'results');
+  if (S.map) S.map.resize();
+}
+function renderResults() {
+  enterResults();
+  $('list-title').textContent = `${S.results.length} lender${S.results.length === 1 ? '' : 's'} near ${S.pt.label}`;
+  renderTable(); renderMap();
+}
+
 /* ---------------- map ---------------- */
-const TIERC = { A: '#1a7f37', B: '#4f9d5a', C: '#c9a227', D: '#e07b1a', E: '#c0392b' };
+const TIERC = { A: '#1a7f37', B: '#3f7d1c', C: '#856a00', D: '#b4530a', E: '#b42318' };   // match --tA..--tE in app.css (4.5:1 on white)
 function initMap() {
   const style = CFG.offline ? { version: 8, sources: { states: { type: 'geojson', data: CFG.data + 'us-states.json' } }, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#dfe6ee' } }, { id: 'states', type: 'fill', source: 'states', paint: { 'fill-color': '#f4f6f8', 'fill-outline-color': '#b7c2cf' } }, { id: 'states-line', type: 'line', source: 'states', paint: { 'line-color': '#9fb0c2', 'line-width': 0.8 } }] } : CFG.tiles;
   S.map = new maplibregl.Map({ container: 'map', style, center: [-96, 38.5], zoom: 3.6, attributionControl: !CFG.offline });
   S.map.addControl(new maplibregl.NavigationControl(), 'top-right');
-  const lg = document.createElement('div'); lg.className = 'legend'; lg.innerHTML = Object.entries(TIERC).map(([t, c]) => `<span class="sw" style="background:${c}"></span>Tier ${t}`).join('<br>') + '<br><span class="sw sq" style="background:#555"></span>Branch &nbsp; <span class="sw" style="background:#fff;border:2px solid #111"></span>Property'; $('map').appendChild(lg);
+  const lg = document.createElement('div'); lg.className = 'legend'; lg.innerHTML = Object.entries(TIERC).map(([t, c]) => `<span style="color:${c}">Tier ${t}</span>`).join('') + '<span>Dots: branches</span><span>Ring: property</span>'; $('map').appendChild(lg);
   S.map.on('load', () => {
     S.map.addSource('circle', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'circle', type: 'fill', source: 'circle', paint: { 'fill-color': '#2d6fd1', 'fill-opacity': 0.06 } });
@@ -211,7 +226,7 @@ function initMap() {
     S.map.addSource('pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'pin', type: 'circle', source: 'pin', paint: { 'circle-radius': 7, 'circle-color': '#fff', 'circle-stroke-color': '#111', 'circle-stroke-width': 3 } });
     for (const id of ['hq', 'br']) { S.map.on('mouseenter', id, () => S.map.getCanvas().style.cursor = 'pointer'); S.map.on('mouseleave', id, () => S.map.getCanvas().style.cursor = ''); }
-    S.map.on('click', 'hq', e => { const p = e.features[0].properties; new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${p.c === 'B' ? 'Bank' : 'Credit union'} · Tier ${p.tier} · score ${Math.round(p.score)}<br>Assets $${(+p.ast).toLocaleString()}M · Inv. CRE $${(+p.inv).toLocaleString()}M<br><a onclick="openLender('${p.id}')">Details & history →</a>`).addTo(S.map); });
+    S.map.on('click', 'hq', e => { const p = e.features[0].properties; new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${p.c === 'B' ? 'Bank' : 'Credit union'} · Tier ${p.tier} · score ${Math.round(p.score)}<br>Assets $${(+p.ast).toLocaleString()}M · Inv. CRE $${(+p.inv).toLocaleString()}M<br><a onclick="openLender('${p.id}')">Details and history</a>`).addTo(S.map); });
     S.map.on('click', 'br', e => { const p = e.features[0].properties; new maplibregl.Popup().setLngLat(e.lngLat).setHTML(branchPopup(p.bid)).addTo(S.map); });
     S.map.on('click', async e => {
       if (S.map.queryRenderedFeatures(e.point, { layers: ['hq', 'br'] }).length) return;
@@ -342,6 +357,7 @@ $('btn-about').onclick = e => { e.preventDefault(); showModal(`<h2>About</h2><p>
 <dt>Method notes</dt><dd>A panel of ${(430927).toLocaleString()} lender-quarters (2016-2026) was used to test which current metrics predict the next four quarters of CRE growth. The strongest, in order: trailing CRE growth, CRE share of loans, CRE and construction as % of capital, size, deposit growth; non-performing loans reduce it. Capital headroom only matters at the extremes. Those findings set the default weights and penalties; weights are adjustable.</dd></dl>`); };
 $('modal-close').onclick = () => $('modal').classList.add('hidden'); $('modal').onclick = e => { if (e.target.id === 'modal') $('modal').classList.add('hidden'); };
 $('drawer-close').onclick = () => $('drawer').classList.add('hidden'); $('drawer').onclick = e => { if (e.target.id === 'drawer') $('drawer').classList.add('hidden'); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('modal').classList.add('hidden'); $('drawer').classList.add('hidden'); } });
 
 /* ---------------- lender name search ---------------- */
 // NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU

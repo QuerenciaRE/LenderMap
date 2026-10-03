@@ -5,83 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRE Lender Finder</title>
 <meta name="description" content="Find banks and credit unions near a property address and rank them by their likelihood of lending on commercial real estate, from FDIC and NCUA call report data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Jost:wght@700&family=Source+Serif+4:wght@400;600&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css">
 <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<body class="landing">
 <header id="top">
-  <div class="brand"><span class="logo">CRE</span> Lender Finder <span class="sub" id="meta-line">loading data…</span></div>
-  <div class="macro" id="macro-line"></div>
-  <nav><a href="#" id="btn-defs">Definitions</a><a href="#" id="btn-about">About &amp; sources</a></nav>
+  <a class="brand" href="./">CRE Lender Finder</a>
+  <div id="hdr-search"></div>
+  <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Find a lender, e.g. TDECU" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
+  <nav><button type="button" class="link" id="btn-defs">Definitions</button><button type="button" class="link" id="btn-about">About &amp; sources</button></nav>
 </header>
+<div id="macro-line" class="macro"></div>
 
-<div id="layout">
-  <aside id="controls">
-    <section>
-      <label class="lbl">Property address</label>
-      <div class="row"><input id="addr" type="text" placeholder="e.g. 233 S Wacker Dr, Chicago, IL" autocomplete="off"><button id="go" class="primary">Search</button></div>
+<section id="landing">
+  <div class="hero">
+    <h1>Find the lenders most likely to finance your property</h1>
+    <p class="subtitle" id="meta-line">Loading data…</p>
+    <div id="search-home">
+      <div id="searchbar">
+        <div class="seg seg-addr">
+          <label class="seg-lbl" for="addr">Address</label>
+          <input id="addr" type="text" placeholder="e.g. 233 S Wacker Dr, Chicago, IL" autocomplete="off">
+        </div>
+        <button id="go" class="primary" type="button">Search</button>
+      </div>
       <div id="addr-result" class="hint"></div>
-    </section>
-
-    <section>
-      <label class="lbl">Find a lender</label>
-      <div class="lsearch"><input id="lname" type="text" placeholder="Name, e.g. TDECU or First Eagle Bank" autocomplete="off"><div id="lsugg" class="hidden"></div></div>
-    </section>
-
-    <section>
-      <label class="lbl">Lender geography</label>
-      <label class="radio"><input type="radio" name="mode" value="hq" checked> HQ within <input id="r-hq" type="number" value="10" min="1" max="500" class="num"> mi</label>
-      <label class="radio"><input type="radio" name="mode" value="state"> HQ in the property's state (or within <input id="r-hq2" type="number" value="100" min="0" max="1000" class="num"> mi) <em>and</em> a branch within <input id="r-br" type="number" value="5" min="1" max="200" class="num"> mi</label>
-    </section>
-
-    <section>
-      <label class="lbl">Loan</label>
-      <div class="row2">
-        <label class="sel">Use <select id="occ"><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select></label>
-        <label class="sel">Amount $<input id="amt" type="text" placeholder="optional" class="num wide"></label>
-      </div>
-      <div class="hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request.</div>
-    </section>
-
-    <section>
-      <label class="lbl">Lender types</label>
-      <label class="chk"><input type="checkbox" id="f-bank" checked> Commercial banks</label>
-      <label class="chk"><input type="checkbox" id="f-thrift" checked> Savings institutions / thrifts</label>
-      <label class="chk"><input type="checkbox" id="f-cu" checked> Credit unions</label>
-      <label class="chk sub"><input type="checkbox" id="f-fom"> include single/multiple common-bond CUs (membership restricted)</label>
-      <label class="chk"><input type="checkbox" id="f-anycre" checked> only lenders with CRE on the books</label>
-    </section>
-
-    <section>
-      <label class="lbl">Scorecard weights <a href="#" id="w-reset" class="mini">reset</a></label>
-      <div class="w"><span>CRE momentum</span><input type="range" id="w-mom" min="0" max="50" value="25"><b>25</b></div>
-      <div class="w"><span>CRE franchise</span><input type="range" id="w-fr" min="0" max="50" value="25"><b>25</b></div>
-      <div class="w"><span>Deposit growth</span><input type="range" id="w-gro" min="0" max="50" value="15"><b>15</b></div>
-      <div class="w"><span>Asset quality</span><input type="range" id="w-qual" min="0" max="50" value="15"><b>15</b></div>
-      <div class="w"><span>Capital</span><input type="range" id="w-cap" min="0" max="50" value="10"><b>10</b></div>
-      <div class="w"><span>Margin (NIM)</span><input type="range" id="w-mar" min="0" max="50" value="10"><b>10</b></div>
-      <div class="hint">Defaults follow what predicted next-year CRE growth 2016–2026 out of sample. Tiers A–E are national quintiles of the score. Penalties: above 400% CRE/capital (banks) or 90% of the business-loan cap (CUs); no CRE on the books ×0.5.</div>
-    </section>
-  </aside>
-
-  <main>
-    <div id="map"></div>
-    <div id="results">
-      <div class="bar">
-        <div id="summary">Enter an address to begin.</div>
-        <div class="tools"><button id="csv" class="ghost" disabled>Download CSV</button></div>
-      </div>
-      <div class="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
     </div>
-  </main>
-</div>
+  </div>
+</section>
 
-<div id="drawer" class="hidden"><div class="drawer-inner">
-  <button class="close" id="drawer-close">×</button>
+<section id="results-view">
+  <div class="split">
+    <section id="listpane" aria-label="Lenders">
+      <div id="opts">
+        <section>
+          <label class="lbl">Lender geography</label>
+          <label class="radio"><input type="radio" name="mode" value="hq" checked> HQ within <input id="r-hq" type="number" value="10" min="1" max="500" class="num"> mi</label>
+          <label class="radio"><input type="radio" name="mode" value="state"> HQ in the property's state (or within <input id="r-hq2" type="number" value="100" min="0" max="1000" class="num"> mi) <em>and</em> a branch within <input id="r-br" type="number" value="5" min="1" max="200" class="num"> mi</label>
+        </section>
+        <section>
+          <label class="lbl">Loan</label>
+          <div class="row2">
+            <label class="sel">Use <select id="occ"><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select></label>
+            <label class="sel">Amount $<input id="amt" type="text" placeholder="optional" class="num wide"></label>
+          </div>
+          <div class="hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request.</div>
+        </section>
+        <section>
+          <label class="lbl">Lender types</label>
+          <label class="chk"><input type="checkbox" id="f-bank" checked> Commercial banks</label>
+          <label class="chk"><input type="checkbox" id="f-thrift" checked> Savings institutions / thrifts</label>
+          <label class="chk"><input type="checkbox" id="f-cu" checked> Credit unions</label>
+          <label class="chk sub"><input type="checkbox" id="f-fom"> include single/multiple common-bond CUs (membership restricted)</label>
+          <label class="chk"><input type="checkbox" id="f-anycre" checked> only lenders with CRE on the books</label>
+        </section>
+        <section>
+          <label class="lbl">Scorecard weights <button type="button" id="w-reset" class="link mini">Reset</button></label>
+          <div class="w"><span>CRE momentum</span><input type="range" id="w-mom" min="0" max="50" value="25"><b>25</b></div>
+          <div class="w"><span>CRE franchise</span><input type="range" id="w-fr" min="0" max="50" value="25"><b>25</b></div>
+          <div class="w"><span>Deposit growth</span><input type="range" id="w-gro" min="0" max="50" value="15"><b>15</b></div>
+          <div class="w"><span>Asset quality</span><input type="range" id="w-qual" min="0" max="50" value="15"><b>15</b></div>
+          <div class="w"><span>Capital</span><input type="range" id="w-cap" min="0" max="50" value="10"><b>10</b></div>
+          <div class="w"><span>Margin (NIM)</span><input type="range" id="w-mar" min="0" max="50" value="10"><b>10</b></div>
+          <div class="hint">Defaults follow what predicted next-year CRE growth 2016–2026 out of sample. Tiers A–E are national quintiles of the score. Penalties: above 400% CRE/capital (banks) or 90% of the business-loan cap (CUs); no CRE on the books ×0.5.</div>
+        </section>
+      </div>
+      <div class="list-head">
+        <h2 id="list-title">Lenders</h2>
+        <p id="summary" class="subtitle">Enter an address to begin.</p>
+        <div class="tools"><button id="csv" type="button" disabled>Download CSV</button></div>
+      </div>
+      <div class="tablewrap" id="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    </section>
+    <aside id="mappane" aria-label="Map"><div id="map"></div></aside>
+  </div>
+</section>
+
+<div id="drawer" class="hidden" role="dialog" aria-modal="true" aria-label="Lender details"><div class="drawer-inner">
+  <button type="button" class="close" id="drawer-close">Close</button>
   <div id="drawer-content"></div>
 </div></div>
 
-<div id="modal" class="hidden"><div class="modal-inner"><button class="close" id="modal-close">×</button><div id="modal-content"></div></div></div>
+<div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="modal-inner"><button type="button" class="close" id="modal-close">Close</button><div id="modal-content"></div></div></div>
 
 <footer>Data: FDIC BankFind Suite (Call Reports, Summary of Deposits), NCUA 5300 Call Reports and branch files, FRED. As reported by each institution; no adjustments. This is a research tool, not a recommendation or an offer of credit. <span id="built"></span></footer>
 
