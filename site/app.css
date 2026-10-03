@@ -120,8 +120,6 @@ body.results #results-view { display: block; }
 #listpane { width: 60%; min-width: 0; padding: 20px 24px 40px 32px; }
 #mappane { width: 40%; position: sticky; top: var(--hdr); height: calc(100vh - var(--hdr)); padding: 16px 24px 16px 0; }
 #map { width: 100%; height: 100%; border-radius: var(--r); overflow: hidden; border: 1px solid var(--line); }
-#opts { border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; margin-bottom: 20px; }
-#opts section { margin-bottom: 14px; }
 .list-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 16px; margin-bottom: 14px; }
 .list-head > div:first-child, .list-head h2, .list-head .subtitle { flex-basis: 100%; }
 .list-head .tools { margin-left: auto; display: flex; gap: 8px; }
@@ -147,6 +145,41 @@ table#tbl { width: max-content; min-width: 100%; font-size: 13px; }
 .badge.B { background: var(--bank); } .badge.C { background: var(--cu); }
 
 footer { padding: 14px 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--soft); }
+
+/* chip row */
+#chipbar { position: sticky; top: var(--hdr); z-index: 20; display: flex; align-items: center; gap: 8px; padding: 12px 32px; background: #fff; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+#chipbar::-webkit-scrollbar { display: none; }
+.chip { flex: none; padding: 7px 14px; border-radius: var(--r-pill); border: 1px solid var(--line-2); background: #fff; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.chip:hover { border-color: var(--ink); }
+.chip[aria-pressed=true] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.chip-filters { font-weight: 600; }
+#fcount:not(:empty) { display: inline-block; margin-left: 6px; min-width: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--ink); color: #fff; font-size: 11px; line-height: 18px; text-align: center; }
+.chip-sep { flex: none; width: 1px; height: 22px; background: var(--line-2); margin: 0 4px; }
+body.results #mappane { top: calc(var(--hdr) + 58px); height: calc(100vh - var(--hdr) - 58px); }
+
+/* filters modal */
+#filters { position: fixed; inset: 0; z-index: 55; background: rgba(29,33,39,.45); display: flex; align-items: center; justify-content: center; }
+#filters.hidden { display: none; }
+.fm-inner { width: min(640px, 94vw); max-height: 90vh; display: flex; flex-direction: column; background: #fff; border-radius: var(--r); box-shadow: var(--shadow-lg); overflow: hidden; }
+.fm-head { position: relative; padding: 18px 24px; border-bottom: 1px solid var(--line); text-align: center; }
+.fm-head h2 { font-size: 18px; padding: 0 80px; }
+.fm-head .close { top: 50%; transform: translateY(-50%); }
+.fm-body { overflow-y: auto; padding: 4px 24px 12px; }
+.fm-body section { padding: 18px 0 22px; border-bottom: 1px solid var(--line); }
+.fm-body section:last-child { border-bottom: none; }
+.fm-body h3 { margin-top: 0; font-size: 19px; }
+.fm-body h3 .mini { font-family: var(--font-sans); font-weight: 500; font-size: 13px; letter-spacing: 0; }
+.fm-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-top: 1px solid var(--line); }
+.fm-foot .primary { padding: 12px 22px; font-weight: 600; }
+.segctl { display: flex; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px; gap: 4px; margin-bottom: 14px; }
+.segctl label { flex: 1; position: relative; }
+.segctl input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segctl span { display: block; text-align: center; padding: 10px 8px; border-radius: 8px; font-weight: 500; border: 1px solid transparent; }
+.segctl input:checked + span { border-color: var(--ink); box-shadow: var(--shadow); }
+.segctl input:focus-visible + span { box-shadow: var(--focus); }
+.fm-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+#filters[data-mode=hq] .geo-state, #filters[data-mode=state] .geo-hq { display: none; }
+.w label { font-weight: 400; }
 
 /* drawer & modal */
 #drawer, #modal { position: fixed; inset: 0; background: rgba(29,33,39,.45); z-index: 50; display: flex; justify-content: flex-end; }

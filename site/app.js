@@ -204,7 +204,7 @@ function enterResults() {
   if (S.map) S.map.resize();
 }
 function renderResults() {
-  enterResults(); updateSummaries();
+  enterResults(); updateSummaries(); syncChips();
   $('list-title').textContent = `${S.results.length} lender${S.results.length === 1 ? '' : 's'} near ${S.pt.label}`;
   renderTable(); renderMap();
 }
@@ -289,7 +289,7 @@ async function getHist(id) {
   return S.histState[st][id];
 }
 window.openLender = async function (id) {
-  const l = S.byId[id]; $('drawer').classList.remove('hidden');
+  const l = S.byId[id]; openDialog('drawer');
   $('drawer-content').innerHTML = `<h2>${esc(l.n)}</h2><div class="meta">Loading history…</div>`;
   const h = await getHist(id).catch(() => null);
   await ensureBranches(l.bst || []).catch(() => null);
@@ -350,15 +350,30 @@ const DEFS = [
   ['Mergers', 'History is as reported under each charter. An acquired institution keeps its own pre-merger history; the acquirer shows its own.'],
   ['Credit-union field of membership', 'Default results include community-charter credit unions and state charters (whose field of membership NCUA does not classify). Single- and multiple-common-bond credit unions can lend only to members and are hidden unless the box is checked.'],
 ];
-function showModal(html) { $('modal-content').innerHTML = html; $('modal').classList.remove('hidden'); }
+function showModal(html) { $('modal-content').innerHTML = html; openDialog('modal'); }
 $('btn-defs').onclick = e => { e.preventDefault(); showModal('<h2>Definitions</h2><dl class="defs">' + DEFS.map(d => `<dt>${d[0]}</dt><dd>${d[1]}</dd>`).join('') + '</dl>'); };
 $('btn-about').onclick = e => { e.preventDefault(); showModal(`<h2>About</h2><p>Free tool for commercial real estate borrowers to find the depository lenders most likely to lend on a property, using only public regulatory filings. Nothing here is a recommendation, an offer of credit, or a statement by any lender.</p>
 <dl class="defs"><dt>Sources</dt><dd>FDIC BankFind Suite API (institutions, locations, quarterly financials from Call Reports, Summary of Deposits); NCUA 5300 Call Report quarterly data and Credit Union Branch Information files; FRED (fed funds, SOFR, Treasury yields, Senior Loan Officer Survey); U.S. Census Bureau geocoder; OpenStreetMap / Photon for address lookup; OpenFreeMap tiles.</dd>
 <dt>Refresh</dt><dd>Bank and credit-union call reports are published roughly 60 days after each quarter end; branch deposits once a year (June 30 data, published late September). The site rebuilds automatically when new data appears.</dd>
 <dt>Method notes</dt><dd>A panel of ${(430927).toLocaleString()} lender-quarters (2016-2026) was used to test which current metrics predict the next four quarters of CRE growth. The strongest, in order: trailing CRE growth, CRE share of loans, CRE and construction as % of capital, size, deposit growth; non-performing loans reduce it. Capital headroom only matters at the extremes. Those findings set the default weights and penalties; weights are adjustable.</dd></dl>`); };
-$('modal-close').onclick = () => $('modal').classList.add('hidden'); $('modal').onclick = e => { if (e.target.id === 'modal') $('modal').classList.add('hidden'); };
-$('drawer-close').onclick = () => $('drawer').classList.add('hidden'); $('drawer').onclick = e => { if (e.target.id === 'drawer') $('drawer').classList.add('hidden'); };
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('modal').classList.add('hidden'); $('drawer').classList.add('hidden'); } });
+/* dialogs (drawer, Definitions/About modal, Filters): focus moves in, Tab stays inside, Esc or Close returns focus */
+const DIALOGS = ['filters', 'modal', 'drawer'], opener = {};
+function openDialog(id) {
+  const el = $(id); if (el.classList.contains('hidden')) opener[id] = document.activeElement;
+  el.classList.remove('hidden'); (el.querySelector('.close') || el).focus();
+}
+function closeDialog(id) { const el = $(id); if (el.classList.contains('hidden')) return; el.classList.add('hidden'); const o = opener[id]; if (o && document.contains(o)) o.focus(); }
+const topDialog = () => ['drawer', 'modal', 'filters'].find(id => !$(id).classList.contains('hidden'));
+for (const id of DIALOGS) { $(id + '-close').onclick = () => closeDialog(id); $(id).addEventListener('click', e => { if (e.target.id === id) closeDialog(id); }); }
+document.addEventListener('keydown', e => {
+  const id = topDialog(); if (!id) return;
+  if (e.key === 'Escape') { e.stopImmediatePropagation(); closeDialog(id); return; }
+  if (e.key !== 'Tab') return;
+  const f = [...$(id).querySelectorAll('button, a[href], a[onclick], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent !== null);
+  if (!f.length) return;
+  if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+  else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+}, true);
 
 /* ---------------- search bar: segments, pop-overs, compact pill ---------------- */
 function typesLabel() {
@@ -398,7 +413,37 @@ async function searchFromBar() {
   await search();
   if (S.pt && S.pt !== before) { closeSearchPanel(); updateSummaries(); }
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { const wasOpen = !!document.querySelector('.seg-pop.on'); closePops(); if (wasOpen) return; closeSearchPanel(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !topDialog()) { const wasOpen = !!document.querySelector('.seg-pop.on'); closePops(); if (wasOpen) return; closeSearchPanel(); } });
+
+/* ---------------- filter chips and Filters modal ---------------- */
+const DEF = { mode: 'hq', 'r-hq': '10', 'r-hq2': '100', 'r-br': '5', 'f-fom': false, 'f-anycre': true, w: { 'w-mom': 25, 'w-fr': 25, 'w-gro': 15, 'w-qual': 15, 'w-cap': 10, 'w-mar': 10 } };
+const modeNow = () => document.querySelector('input[name=mode]:checked').value;
+function syncChips() {
+  const occ = $('occ').value, mode = modeNow();
+  document.querySelectorAll('.chip[data-occ]').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.occ === occ)));
+  document.querySelectorAll('.chip[data-type]').forEach(c => c.setAttribute('aria-pressed', String($(c.dataset.type).checked)));
+  $('chip-amt').textContent = $('amt').value.trim() ? 'Amount ' + amtLabel() : 'Add amount';
+  $('chip-amt').setAttribute('aria-pressed', String(!!$('amt').value.trim()));
+  $('chip-geo').textContent = mode === 'hq' ? `HQ within ${$('r-hq').value || 10} mi` : `In ${S.st || 'state'} + branch within ${$('r-br').value || 5} mi`;
+  $('filters').dataset.mode = mode;
+  const n = (mode !== DEF.mode) + ['r-hq', 'r-hq2', 'r-br'].filter(k => $(k).value !== DEF[k]).length + ($('f-fom').checked !== DEF['f-fom']) + ($('f-anycre').checked !== DEF['f-anycre']) + Object.entries(DEF.w).some(([k, v]) => +$(k).value !== v);
+  $('fcount').textContent = n ? n : '';
+  $('btn-filters').setAttribute('aria-label', n ? `Filters, ${n} changed` : 'Filters');
+  $('f-apply').textContent = S.pt ? `Show ${S.results.length} lender${S.results.length === 1 ? '' : 's'}` : 'Done';
+}
+document.querySelectorAll('.chip[data-occ]').forEach(c => c.onclick = () => { if ($('occ').value === c.dataset.occ) return; $('occ').value = c.dataset.occ; $('occ').dispatchEvent(new Event('change')); updateSummaries(); syncChips(); });
+document.querySelectorAll('.chip[data-type]').forEach(c => c.onclick = () => { const b = $(c.dataset.type); b.checked = !b.checked; b.dispatchEvent(new Event('change')); syncChips(); });
+$('chip-amt').onclick = e => { e.stopPropagation(); openSearchPanel(); $('amt').focus(); };
+$('chip-geo').onclick = () => openDialog('filters');
+$('btn-filters').onclick = () => openDialog('filters');
+$('f-apply').onclick = () => closeDialog('filters');
+document.querySelectorAll('input[name=mode], #r-hq, #r-hq2, #r-br, #f-fom, #f-anycre').forEach(el => el.addEventListener('change', syncChips));
+$('f-reset').onclick = () => {
+  document.querySelector(`input[name=mode][value=${DEF.mode}]`).checked = true;
+  ['r-hq', 'r-hq2', 'r-br'].forEach(k => $(k).value = DEF[k]); $('f-fom').checked = DEF['f-fom']; $('f-anycre').checked = DEF['f-anycre'];
+  Object.entries(DEF.w).forEach(([k, v]) => $(k).value = v);
+  rescoreAll(); syncChips(); run();
+};
 
 /* ---------------- lender name search ---------------- */
 // NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU
