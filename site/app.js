@@ -200,10 +200,11 @@ $('tbl').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.ma
 function enterResults() {
   if (document.body.classList.contains('results')) return;
   document.body.classList.replace('landing', 'results');
+  $('hdr-drop').appendChild($('search-home'));   // the one search form moves under the header; the compact pill opens it
   if (S.map) S.map.resize();
 }
 function renderResults() {
-  enterResults();
+  enterResults(); updateSummaries();
   $('list-title').textContent = `${S.results.length} lender${S.results.length === 1 ? '' : 's'} near ${S.pt.label}`;
   renderTable(); renderMap();
 }
@@ -359,6 +360,46 @@ $('modal-close').onclick = () => $('modal').classList.add('hidden'); $('modal').
 $('drawer-close').onclick = () => $('drawer').classList.add('hidden'); $('drawer').onclick = e => { if (e.target.id === 'drawer') $('drawer').classList.add('hidden'); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('modal').classList.add('hidden'); $('drawer').classList.add('hidden'); } });
 
+/* ---------------- search bar: segments, pop-overs, compact pill ---------------- */
+function typesLabel() {
+  const on = [['f-bank', 'Banks'], ['f-thrift', 'Thrifts'], ['f-cu', 'Credit unions']].filter(([id]) => $(id).checked).map(x => x[1]);
+  return on.length === 3 ? 'All types' : on.length ? on.join(', ') : 'None selected';
+}
+function amtLabel() { const v = $('amt').value.trim(); return v ? '$' + v.replace(/^\$/, '') : 'Any amount'; }
+function updateSummaries() {
+  const occ = $('occ').value === 'inv' ? 'Investment' : 'Owner-occupied', types = typesLabel();
+  $('occ-val').textContent = occ; $('occ-val').classList.add('set');
+  document.querySelectorAll('input[name=occ-r]').forEach(r => r.checked = r.value === $('occ').value);
+  $('types-val').textContent = types; $('types-val').classList.toggle('set', types !== 'All types');
+  $('pc-addr').textContent = S.pt ? S.pt.label : 'Address'; $('pc-occ').textContent = occ; $('pc-amt').textContent = amtLabel(); $('pc-types').textContent = types;
+  $('pill-compact').setAttribute('aria-label', `Edit search: ${S.pt ? S.pt.label : 'no address'}, ${occ}, ${amtLabel()}, ${types}`);
+}
+function closePops() {
+  document.querySelectorAll('.seg-pop').forEach(s => { s.classList.remove('on'); s.querySelector('.pop').hidden = true; s.querySelector('.seg-btn').setAttribute('aria-expanded', 'false'); });
+  $('searchbar').classList.remove('active');
+}
+function togglePop(seg) {
+  const open = !seg.classList.contains('on'); closePops();
+  if (!open) return;
+  seg.classList.add('on'); seg.querySelector('.pop').hidden = false; seg.querySelector('.seg-btn').setAttribute('aria-expanded', 'true'); $('searchbar').classList.add('active');
+  const first = seg.querySelector('.pop input:checked') || seg.querySelector('.pop input'); if (first) first.focus();
+}
+document.querySelectorAll('.seg-pop .seg-btn').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); togglePop(b.closest('.seg-pop')); }));
+document.querySelectorAll('.seg-pop .pop').forEach(p => p.addEventListener('click', e => e.stopPropagation()));
+document.addEventListener('click', e => { if (!e.target.closest('.seg-pop')) closePops(); if (!e.target.closest('#hdr-drop, #pill-compact')) closeSearchPanel(); });
+document.querySelectorAll('input[name=occ-r]').forEach(r => r.addEventListener('change', () => { $('occ').value = r.value; $('occ').dispatchEvent(new Event('change')); updateSummaries(); }));
+['f-bank', 'f-thrift', 'f-cu'].forEach(id => $(id).addEventListener('change', updateSummaries));
+$('amt').addEventListener('input', updateSummaries);
+function openSearchPanel() { $('hdr-drop').hidden = false; $('pill-compact').setAttribute('aria-expanded', 'true'); $('addr').focus(); $('addr').select(); }
+function closeSearchPanel() { if ($('hdr-drop').hidden) return; closePops(); $('hdr-drop').hidden = true; $('pill-compact').setAttribute('aria-expanded', 'false'); }
+$('pill-compact').addEventListener('click', e => { e.stopPropagation(); $('hdr-drop').hidden ? openSearchPanel() : closeSearchPanel(); });
+async function searchFromBar() {
+  closePops(); const before = S.pt;
+  await search();
+  if (S.pt && S.pt !== before) { closeSearchPanel(); updateSummaries(); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const wasOpen = !!document.querySelector('.seg-pop.on'); closePops(); if (wasOpen) return; closeSearchPanel(); } });
+
 /* ---------------- lender name search ---------------- */
 // NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU
 const NORM = s => (s || '').toUpperCase().replace(/&/g, ' AND ').replace(/[^A-Z0-9]+/g, ' ').trim();
@@ -406,7 +447,7 @@ $('lsugg').addEventListener('mousedown', e => { const o = e.target.closest('.opt
 $('lname').addEventListener('blur', () => $('lsugg').classList.add('hidden'));
 
 /* ---------------- wiring ---------------- */
-$('go').onclick = search; $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+$('go').onclick = searchFromBar; $('addr').addEventListener('keydown', e => { if (e.key === 'Enter') searchFromBar(); });
 document.querySelectorAll('input[name=mode], #r-hq, #r-hq2, #r-br, #amt, #f-bank, #f-thrift, #f-cu, #f-fom, #f-anycre').forEach(el => el.addEventListener('change', run));
 document.querySelectorAll('.w input').forEach(el => el.addEventListener('input', () => { rescoreAll(); if (S.results.length) run(); }));
 $('occ').addEventListener('change', () => { rescoreAll(); run(); });

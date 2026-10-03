@@ -14,10 +14,11 @@
 <body class="landing">
 <header id="top">
   <a class="brand" href="./">CRE Lender Finder</a>
-  <div id="hdr-search"></div>
+  <div id="hdr-search"><button type="button" id="pill-compact" aria-expanded="false" aria-controls="hdr-drop"><span id="pc-addr">Address</span><span id="pc-occ">Investment</span><span id="pc-amt">Any amount</span><span id="pc-types">All types</span><span class="pc-go">Search</span></button></div>
   <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Find a lender, e.g. TDECU" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
   <nav><button type="button" class="link" id="btn-defs">Definitions</button><button type="button" class="link" id="btn-about">About &amp; sources</button></nav>
 </header>
+<div id="hdr-drop" hidden></div>
 <div id="macro-line" class="macro"></div>
 
 <section id="landing">
@@ -25,14 +26,37 @@
     <h1>Find the lenders most likely to finance your property</h1>
     <p class="subtitle" id="meta-line">Loading data…</p>
     <div id="search-home">
-      <div id="searchbar">
+      <div id="searchbar" role="search">
         <div class="seg seg-addr">
           <label class="seg-lbl" for="addr">Address</label>
-          <input id="addr" type="text" placeholder="e.g. 233 S Wacker Dr, Chicago, IL" autocomplete="off">
+          <input id="addr" type="text" placeholder="Street, city and state, or ZIP" autocomplete="off">
+        </div>
+        <div class="seg seg-pop" data-pop="pop-occ">
+          <span class="seg-lbl" id="lbl-occ">Loan use</span>
+          <button type="button" class="seg-btn" aria-haspopup="true" aria-expanded="false" aria-controls="pop-occ" aria-describedby="lbl-occ" id="occ-val">Investment</button>
+          <div class="pop" id="pop-occ" hidden>
+            <label class="pop-row"><span><b>Investment property</b><span class="dim">Non-owner-occupied, multifamily, construction</span></span><input type="radio" name="occ-r" value="inv" checked></label>
+            <label class="pop-row"><span><b>Owner-occupied</b><span class="dim">The borrower's business occupies the property</span></span><input type="radio" name="occ-r" value="oo"></label>
+            <select id="occ" hidden><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select>
+          </div>
+        </div>
+        <div class="seg">
+          <label class="seg-lbl" for="amt">Amount</label>
+          <input id="amt" type="text" placeholder="Any amount" autocomplete="off" inputmode="decimal">
+        </div>
+        <div class="seg seg-pop" data-pop="pop-types">
+          <span class="seg-lbl" id="lbl-types">Lender type</span>
+          <button type="button" class="seg-btn" aria-haspopup="true" aria-expanded="false" aria-controls="pop-types" aria-describedby="lbl-types" id="types-val">All types</button>
+          <div class="pop pop-right" id="pop-types" hidden>
+            <label class="pop-row"><span><b>Commercial banks</b></span><input type="checkbox" id="f-bank" checked></label>
+            <label class="pop-row"><span><b>Savings institutions / thrifts</b></span><input type="checkbox" id="f-thrift" checked></label>
+            <label class="pop-row"><span><b>Credit unions</b><span class="dim">Membership rules apply; see Filters</span></span><input type="checkbox" id="f-cu" checked></label>
+          </div>
         </div>
         <button id="go" class="primary" type="button">Search</button>
       </div>
       <div id="addr-result" class="hint"></div>
+      <div class="hint amt-hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request. Dollars or $M both work.</div>
     </div>
   </div>
 </section>
@@ -47,19 +71,8 @@
           <label class="radio"><input type="radio" name="mode" value="state"> HQ in the property's state (or within <input id="r-hq2" type="number" value="100" min="0" max="1000" class="num"> mi) <em>and</em> a branch within <input id="r-br" type="number" value="5" min="1" max="200" class="num"> mi</label>
         </section>
         <section>
-          <label class="lbl">Loan</label>
-          <div class="row2">
-            <label class="sel">Use <select id="occ"><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select></label>
-            <label class="sel">Amount $<input id="amt" type="text" placeholder="optional" class="num wide"></label>
-          </div>
-          <div class="hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request.</div>
-        </section>
-        <section>
-          <label class="lbl">Lender types</label>
-          <label class="chk"><input type="checkbox" id="f-bank" checked> Commercial banks</label>
-          <label class="chk"><input type="checkbox" id="f-thrift" checked> Savings institutions / thrifts</label>
-          <label class="chk"><input type="checkbox" id="f-cu" checked> Credit unions</label>
-          <label class="chk sub"><input type="checkbox" id="f-fom"> include single/multiple common-bond CUs (membership restricted)</label>
+          <label class="lbl">Credit unions and CRE</label>
+          <label class="chk"><input type="checkbox" id="f-fom"> include single/multiple common-bond CUs (membership restricted)</label>
           <label class="chk"><input type="checkbox" id="f-anycre" checked> only lenders with CRE on the books</label>
         </section>
         <section>
