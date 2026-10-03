@@ -206,31 +206,92 @@ function enterResults() {
 function renderResults() {
   enterResults(); updateSummaries(); syncChips();
   $('list-title').textContent = `${S.results.length} lender${S.results.length === 1 ? '' : 's'} near ${S.pt.label}`;
-  renderTable(); renderMap();
+  renderTable(); renderCards(); renderMap();
 }
 
+/* ---------------- cards (ranked by score, same order as the table's default sort) ---------------- */
+const ranked = () => S.results.slice().sort((a, b) => b.score - a.score);
+function typeText(r) { return (r.c === 'B' ? 'Bank' : 'Credit union') + (r.cl === 'Savings institution' ? ', thrift' : '') + (r.c === 'C' && r.licu ? ', low-income designated' : ''); }
+function renderCards() {
+  const occ = $('occ').value;
+  $('cards').innerHTML = ranked().map((r, i) => {
+    const stats = [['Score', r.score.toFixed(0)], ['Assets', '$' + fmtM(r.ast, 0) + 'M'],
+      occ === 'inv' ? ['Inv. CRE', '$' + fmtM(r.inv, 1) + 'M'] : ['OO CRE', '$' + fmtM(r.oo, 1) + 'M'],
+      occ === 'inv' ? ['Inv. CRE / capital', fmtP(r.crecap, 0)] : ['OO CRE / capital', fmtP(r.oocap, 0)],
+      ['CRE growth 4Q', fmtP(r.momv, 2)], ['Lending limit', '$' + fmtM(r.limit, 1) + 'M']];
+    const near = r.nbr ? `${r.nbr} branch${r.nbr === 1 ? '' : 'es'} near (closest ${r.brdist.toFixed(1)} mi)` : 'No branch within the radius';
+    return `<li class="lcard" data-id="${r.id}" tabindex="0" aria-label="${i + 1}. ${esc(r.n)}, tier ${r.tier}, score ${r.score.toFixed(0)}. Open details">
+      <div class="lc-tier t${r.tier}"><span class="lc-letter">${r.tier}</span><span class="lc-sub">Tier</span></div>
+      <div class="lc-main">
+        <div class="lc-top"><span class="lc-rank">${i + 1}</span><span class="lc-name">${esc(r.n)}</span></div>
+        <div class="lc-meta">${typeText(r)} · HQ ${esc(r.ci)}, ${r.st}, ${r.dist.toFixed(1)} mi · ${near}</div>
+        <dl class="lc-stats">${stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+      </div></li>`;
+  }).join('') || '<li class="empty">No lenders match. Try "In state + branch nearby" in Filters, a larger radius, or more lender types.</li>';
+}
+function highlight(id, on, fromMarker) {
+  const m = S.markers && S.markers[id], card = $('cards').querySelector(`[data-id="${id}"]`);
+  if (m) m.getElement().classList.toggle('hl', on);
+  if (card) { card.classList.toggle('hl', on); if (on && fromMarker && !$('cards').hidden) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+const cardOf = e => e.target.closest && e.target.closest('.lcard');
+$('cards').addEventListener('mouseover', e => { const c = cardOf(e); if (c && !c.contains(e.relatedTarget)) highlight(c.dataset.id, true); });
+$('cards').addEventListener('mouseout', e => { const c = cardOf(e); if (c && !c.contains(e.relatedTarget)) highlight(c.dataset.id, false); });
+$('cards').addEventListener('focusin', e => { const c = cardOf(e); if (c) highlight(c.dataset.id, true); });
+$('cards').addEventListener('focusout', e => { const c = cardOf(e); if (c) highlight(c.dataset.id, false); });
+$('cards').addEventListener('click', e => { const c = cardOf(e); if (c) openLender(c.dataset.id); });
+$('cards').addEventListener('keydown', e => { const c = cardOf(e); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openLender(c.dataset.id); } });
+function setView(v) {
+  S.view = v; try { localStorage.setItem('lm.view', v); } catch (e) {}
+  $('cards').hidden = v !== 'cards'; $('tablewrap').hidden = v !== 'table';
+  $('v-cards').setAttribute('aria-pressed', String(v === 'cards')); $('v-table').setAttribute('aria-pressed', String(v === 'table'));
+}
+$('v-cards').onclick = () => setView('cards'); $('v-table').onclick = () => setView('table');
+setView((() => { try { return localStorage.getItem('lm.view') === 'table' ? 'table' : 'cards'; } catch (e) { return 'cards'; } })());
+
 /* ---------------- map ---------------- */
+let popup = null;
+function showPopup(lngLat, html) {   // MapLibre's own close glyph is replaced by a text "Close" button
+  if (popup) popup.remove();
+  popup = new maplibregl.Popup({ closeButton: false, offset: 16, maxWidth: '300px' }).setLngLat(lngLat).setHTML(html + '<div class="pp-actions"><button type="button" class="pp-close">Close</button></div>').addTo(S.map);
+  popup.getElement().querySelector('.pp-close').onclick = () => popup.remove();
+  return popup;
+}
+function markerPopup(r) {
+  return `<div class="pp"><span class="tier t${r.tier}">${r.tier}</span> <b>${esc(r.n)}</b><div class="dim">${typeText(r)} · HQ ${esc(r.ci)}, ${r.st}</div>
+  <dl class="pp-stats"><div><dt>Score</dt><dd>${r.score.toFixed(0)}</dd></div><div><dt>Assets</dt><dd>$${fmtM(r.ast, 0)}M</dd></div><div><dt>Inv. CRE</dt><dd>$${fmtM(r.inv, 1)}M</dd></div></dl>
+  <button type="button" class="primary pp-details" onclick="openLender('${r.id}')">Details</button></div>`;
+}
+function renderMarkers() {
+  Object.values(S.markers || {}).forEach(m => m.remove()); S.markers = {};
+  for (const r of ranked().reverse()) {   // best-ranked added last so it sits on top
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'mk'; el.tabIndex = -1; el.textContent = r.tier; el.style.setProperty('--tc', TIERC[r.tier]);
+    el.setAttribute('aria-label', `${r.n}, tier ${r.tier}`);
+    el.addEventListener('mouseenter', () => highlight(r.id, true, true)); el.addEventListener('mouseleave', () => highlight(r.id, false));
+    el.addEventListener('click', e => { e.stopPropagation(); showPopup([r.lon, r.lat], markerPopup(r)); });
+    S.markers[r.id] = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([r.lon, r.lat]).addTo(S.map);
+  }
+}
+
 const TIERC = { A: '#1a7f37', B: '#3f7d1c', C: '#856a00', D: '#b4530a', E: '#b42318' };   // match --tA..--tE in app.css (4.5:1 on white)
 function initMap() {
   const style = CFG.offline ? { version: 8, sources: { states: { type: 'geojson', data: CFG.data + 'us-states.json' } }, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#dfe6ee' } }, { id: 'states', type: 'fill', source: 'states', paint: { 'fill-color': '#f4f6f8', 'fill-outline-color': '#b7c2cf' } }, { id: 'states-line', type: 'line', source: 'states', paint: { 'line-color': '#9fb0c2', 'line-width': 0.8 } }] } : CFG.tiles;
   S.map = new maplibregl.Map({ container: 'map', style, center: [-96, 38.5], zoom: 3.6, attributionControl: !CFG.offline });
   S.map.addControl(new maplibregl.NavigationControl(), 'top-right');
-  const lg = document.createElement('div'); lg.className = 'legend'; lg.innerHTML = Object.entries(TIERC).map(([t, c]) => `<span style="color:${c}">Tier ${t}</span>`).join('') + '<span>Dots: branches</span><span>Ring: property</span>'; $('map').appendChild(lg);
+  const lg = document.createElement('div'); lg.className = 'legend'; lg.innerHTML = Object.entries(TIERC).map(([t, c]) => `<span style="color:${c}">Tier ${t}</span>`).join('') + '<span>Letters: headquarters</span><span>Dots: branches</span><span>Ring: property</span>'; $('map').appendChild(lg);
   S.map.on('load', () => {
     S.map.addSource('circle', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'circle', type: 'fill', source: 'circle', paint: { 'fill-color': '#2d6fd1', 'fill-opacity': 0.06 } });
     S.map.addLayer({ id: 'circle-line', type: 'line', source: 'circle', paint: { 'line-color': '#2d6fd1', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
     S.map.addSource('br', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'br', type: 'circle', source: 'br', paint: { 'circle-radius': 4, 'circle-color': ['get', 'color'], 'circle-opacity': 0.75, 'circle-stroke-color': '#333', 'circle-stroke-width': 0.6 } });
-    S.map.addSource('hq', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    S.map.addLayer({ id: 'hq', type: 'circle', source: 'hq', paint: { 'circle-radius': ['get', 'r'], 'circle-color': ['get', 'color'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5, 'circle-opacity': 0.9 } });
     S.map.addSource('pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'pin', type: 'circle', source: 'pin', paint: { 'circle-radius': 7, 'circle-color': '#fff', 'circle-stroke-color': '#111', 'circle-stroke-width': 3 } });
-    for (const id of ['hq', 'br']) { S.map.on('mouseenter', id, () => S.map.getCanvas().style.cursor = 'pointer'); S.map.on('mouseleave', id, () => S.map.getCanvas().style.cursor = ''); }
-    S.map.on('click', 'hq', e => { const p = e.features[0].properties; new maplibregl.Popup().setLngLat(e.lngLat).setHTML(`<b>${esc(p.n)}</b><br>${p.c === 'B' ? 'Bank' : 'Credit union'} · Tier ${p.tier} · score ${Math.round(p.score)}<br>Assets $${(+p.ast).toLocaleString()}M · Inv. CRE $${(+p.inv).toLocaleString()}M<br><a onclick="openLender('${p.id}')">Details and history</a>`).addTo(S.map); });
-    S.map.on('click', 'br', e => { const p = e.features[0].properties; new maplibregl.Popup().setLngLat(e.lngLat).setHTML(branchPopup(p.bid)).addTo(S.map); });
+    S.map.on('mouseenter', 'br', () => S.map.getCanvas().style.cursor = 'pointer'); S.map.on('mouseleave', 'br', () => S.map.getCanvas().style.cursor = '');
+    S.map.on('click', 'br', e => { const p = e.features[0].properties; showPopup(e.lngLat, branchPopup(p.bid)); });
     S.map.on('click', async e => {
-      if (S.map.queryRenderedFeatures(e.point, { layers: ['hq', 'br'] }).length) return;
+      if (S.map.queryRenderedFeatures(e.point, { layers: ['br'] }).length) return;
       const { lat, lng } = e.lngLat; S.pt = { lat, lon: lng, st: await stateAt(lat, lng).catch(() => null), label: `Dropped pin ${lat.toFixed(4)}, ${lng.toFixed(4)}` }; S.st = S.pt.st;
       $('addr-result').innerHTML = `${esc(S.pt.label)}${S.st ? ` <span class="dim">(${S.st})</span>` : ''}`; $('addr').value = ''; history.replaceState(null, '', location.pathname); run();
     });
@@ -239,11 +300,11 @@ function initMap() {
 }
 function circlePoly(lat, lon, mi) { const pts = []; for (let i = 0; i <= 64; i++) { const a = i / 64 * 2 * Math.PI; pts.push([lon + (mi / 69.172 / Math.cos(lat * Math.PI / 180)) * Math.cos(a), lat + (mi / 68.703) * Math.sin(a)]); } return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [pts] } }; }
 function renderMap() {
-  if (!S.map || !S.map.getSource('hq')) return;
+  if (!S.map || !S.map.getSource('pin')) return;
   const { lat, lon } = S.pt, ids = new Set(S.results.map(r => r.id));
   S.map.getSource('pin').setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] } }] });
   S.map.getSource('circle').setData({ type: 'FeatureCollection', features: [circlePoly(lat, lon, S.mode === 'hq' ? S.rHq : S.rBr)] });
-  S.map.getSource('hq').setData({ type: 'FeatureCollection', features: S.results.map(r => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [r.lon, r.lat] }, properties: { id: r.id, n: r.n, c: r.c, tier: r.tier, score: r.score, ast: r.ast, inv: r.inv, color: TIERC[r.tier], r: Math.max(5, Math.min(16, 2 + 2.2 * Math.log10(Math.max(r.ast || 10, 10)))) } })) });
+  renderMarkers();
   const brs = [];
   for (const b of S.branches) if (ids.has(b[1]) && hav(lat, lon, b[2], b[3]) <= S.rBr) brs.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [b[3], b[2]] }, properties: { bid: b[0], color: TIERC[S.byId[b[1]].tier] } });
   S.map.getSource('br').setData({ type: 'FeatureCollection', features: brs });

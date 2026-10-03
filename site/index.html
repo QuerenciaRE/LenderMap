@@ -79,9 +79,14 @@
       <div class="list-head">
         <h2 id="list-title">Lenders</h2>
         <p id="summary" class="subtitle">Enter an address to begin.</p>
-        <div class="tools"><button id="csv" type="button" disabled>Download CSV</button></div>
+        <div class="tools">
+          <div class="viewtoggle" role="group" aria-label="View"><button type="button" id="v-cards" aria-pressed="true">Cards</button><button type="button" id="v-table" aria-pressed="false">Table</button></div>
+          <button id="csv" type="button" disabled>Download CSV</button>
+        </div>
       </div>
-      <div class="tablewrap" id="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      <div id="sponsor-slot"></div>
+      <ol id="cards" class="lcards" aria-label="Ranked lenders"></ol>
+      <div class="tablewrap" id="tablewrap" hidden><table id="tbl"><thead></thead><tbody></tbody></table></div>
     </section>
     <aside id="mappane" aria-label="Map"><div id="map"></div></aside>
   </div>
