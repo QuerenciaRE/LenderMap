@@ -250,3 +250,53 @@ dl.defs dt { font-weight: 600; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
 .pp-details { align-self: flex-start; padding: 7px 14px; }
 .pp-actions { text-align: right; margin-top: 6px; }
 .pp-close { font-size: 12px; padding: 4px 10px; border-radius: var(--r-pill); }
+
+/* landing rows (featured.json) */
+#rows { max-width: 1376px; margin: 48px auto 0; }
+.lrow { margin-bottom: 40px; }
+.lrow-head { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.lrow-head h2 { font-size: 22px; flex: 1; }
+.lrow-nav { display: flex; gap: 6px; }
+.lrow-nav button { padding: 6px 12px; border-radius: var(--r-pill); font-size: 13px; }
+.sp-pick { display: flex; align-items: center; gap: 8px; }
+.sp-pick .lbl { margin: 0; }
+.lrow-track { list-style: none; margin: 0; padding: 4px 2px 12px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, calc((100% - 80px) / 5)); gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.pcard { scroll-snap-align: start; display: flex; flex-direction: column; gap: 6px; }
+.pc-main { display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 0; border: none; background: none; text-align: left; font-weight: 400; }
+.pc-main:hover .pc-tile { box-shadow: var(--shadow-lg); }
+.pc-tile { position: relative; height: 150px; border-radius: var(--r); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 8px; transition: box-shadow .15s; }
+.pc-letter { font-size: 52px; font-weight: 600; line-height: 1; }
+.pc-sub { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+.pc-badge { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: var(--r-pill); background: rgba(255,255,255,.94); color: var(--ink); font-size: 12.5px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+.pc-name { font-weight: 600; font-size: 14.5px; }
+.pc-meta { color: var(--muted); font-size: 13px; }
+.pc-blurb { color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pc-profile { font-size: 13px; font-weight: 500; color: var(--ink); text-underline-offset: 3px; }
+.pcard-empty { color: var(--muted); padding: 24px 0; }
+.how { max-width: 1100px; margin: 24px auto 0; padding-top: 32px; border-top: 1px solid var(--line); }
+.how h2 { text-align: center; margin-bottom: 20px; }
+.how ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.how li { display: flex; flex-direction: column; gap: 4px; }
+.how li b { font-family: var(--font-serif); font-weight: 400; font-size: 18px; }
+.how li > span:last-child { color: var(--muted); }
+.how .lbl { margin: 0; }
+
+/* sponsored slot above the ranked list */
+.sslot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 14px 16px; margin-bottom: 18px; border: 1px dashed var(--line-2); border-radius: var(--r); background: var(--soft); }
+.sslot > .lbl { flex-basis: 100%; margin: 0; }
+.ss-main { border: none; background: none; padding: 0; text-align: left; font-weight: 400; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.ss-blurb { flex-basis: 100%; color: var(--muted); font-size: 13px; }
+.sslot .hint { flex-basis: 100%; margin: 0; }
+
+/* skeleton loaders */
+.skel { pointer-events: none; }
+.skel span { display: block; border-radius: 8px; background: linear-gradient(90deg, #eef0f3 25%, #f6f7f9 50%, #eef0f3 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite linear; }
+.pcard.skel span:nth-child(1) { height: 150px; border-radius: var(--r); }
+.pcard.skel span:nth-child(2) { height: 14px; width: 70%; }
+.pcard.skel span:nth-child(3) { height: 12px; width: 45%; }
+.lcard.skel { flex-direction: column; gap: 10px; cursor: default; }
+.lcard.skel span:nth-child(1) { height: 18px; width: 40%; }
+.lcard.skel span:nth-child(2) { height: 12px; width: 65%; }
+.lcard.skel span:nth-child(3) { height: 36px; width: 100%; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skel span { animation: none; } .lcard, .mk, .pc-tile { transition: none; } }

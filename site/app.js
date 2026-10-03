@@ -61,7 +61,7 @@ async function load() {
   $('built').textContent = `Data built ${meta.built}.`;
   if (CFG.offline) { $('csv').style.display = 'none'; $('addr').placeholder = 'ZIP code, e.g. 60606 — or click the map'; $('addr-result').textContent = 'Preview build: enter a 5-digit ZIP or click the map to drop a pin. The hosted site accepts full street addresses and shows a street basemap.'; }
   else $('addr-result').textContent = 'Street address, city and state, or a ZIP code. After a search you can also click the map to drop a pin.';
-  rescoreAll();
+  rescoreAll(); renderPlacements();
   const q = new URLSearchParams(location.search).get('q'); if (q) { $('addr').value = q; search(); }
 }
 
@@ -206,7 +206,7 @@ function enterResults() {
 function renderResults() {
   enterResults(); updateSummaries(); syncChips();
   $('list-title').textContent = `${S.results.length} lender${S.results.length === 1 ? '' : 's'} near ${S.pt.label}`;
-  renderTable(); renderCards(); renderMap();
+  renderSponsorSlot(); renderTable(); renderCards(); renderMap();
 }
 
 /* ---------------- cards (ranked by score, same order as the table's default sort) ---------------- */
@@ -471,7 +471,9 @@ function closeSearchPanel() { if ($('hdr-drop').hidden) return; closePops(); $('
 $('pill-compact').addEventListener('click', e => { e.stopPropagation(); $('hdr-drop').hidden ? openSearchPanel() : closeSearchPanel(); });
 async function searchFromBar() {
   closePops(); const before = S.pt;
+  if (document.body.classList.contains('results') && $('addr').value.trim()) $('cards').innerHTML = skeletons(4, 'lcard');
   await search();
+  if (S.pt === before && S.results.length) renderCards();   // lookup failed: put the previous results back
   if (S.pt && S.pt !== before) { closeSearchPanel(); updateSummaries(); }
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !topDialog()) { const wasOpen = !!document.querySelector('.seg-pop.on'); closePops(); if (wasOpen) return; closeSearchPanel(); } });
@@ -505,6 +507,72 @@ $('f-reset').onclick = () => {
   Object.entries(DEF.w).forEach(([k, v]) => $(k).value = v);
   rescoreAll(); syncChips(); run();
 };
+
+/* ---------------- placements (featured.json): never touch score, tier or result order ---------------- */
+// Placeholder entries render only on a preview URL (?preview=1) or a local copy, so the public site shows no fake sponsors.
+const PREVIEW = new URLSearchParams(location.search).has('preview') || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+const PL = { all: null };
+const today = () => new Date().toISOString().slice(0, 10);
+function activePlacements(type) {
+  const d = today();
+  return (PL.all || []).filter(p => p.type === type && (!p.placeholder || PREVIEW) && (!p.start_date || p.start_date <= d) && (!p.end_date || p.end_date >= d) && (!S.lenders.length || S.byId[p.id]));
+}
+// The state for "Sponsored in {state}". One place to swap in a signed-in borrower's registered state later.
+function currentSponsorState() {
+  if (window.LM_USER && window.LM_USER.state) return window.LM_USER.state;
+  try { const v = localStorage.getItem('lm.sponsorState'); if (v && STATES[v]) return v; } catch (e) {}
+  if (S.st) return S.st;
+  const first = activePlacements('sponsored').flatMap(p => p.states || [])[0];
+  return first || 'TX';
+}
+function setSponsorState(st) { try { localStorage.setItem('lm.sponsorState', st); } catch (e) {} renderPlacements(); }
+const isPaid = p => p.paid !== false;
+function placementCard(p) {
+  const l = S.byId[p.id];
+  if (!l) return '';
+  return `<li class="pcard">
+    <button type="button" class="pc-main" data-id="${l.id}" aria-label="${esc(l.n)}${isPaid(p) ? ', sponsored' : ''}, tier ${l.tier}. Open details">
+      <span class="pc-tile t${l.tier}"><span class="pc-letter">${l.tier}</span><span class="pc-sub">Tier</span>${isPaid(p) ? '<span class="pc-badge">Sponsored</span>' : ''}</span>
+      <span class="pc-name">${esc(l.n)}</span>
+      <span class="pc-meta">${typeText(l)} · ${esc(l.ci)}, ${l.st}</span>
+      <span class="pc-blurb">${esc(p.blurb || '')}</span>
+    </button>
+    ${p.profile_url ? `<a class="pc-profile" href="${esc(p.profile_url)}" target="_blank" rel="noopener sponsored">View profile</a>` : ''}
+  </li>`;
+}
+const skeletons = (n, cls) => Array.from({ length: n }, () => `<li class="${cls} skel" aria-hidden="true"><span></span><span></span><span></span></li>`).join('');
+function fillRow(id, items) {
+  const row = $(id); row.hidden = !items.length;
+  row.querySelector('.lrow-track').innerHTML = items.join('');
+}
+function renderPlacements() {
+  if (!PL.all) return;
+  if (!S.lenders.length) {   // data still loading: show the rows that will have entries, as skeletons
+    for (const [id, type] of [['row-featured', 'featured'], ['row-profile', 'profile'], ['row-sponsored', 'sponsored']]) if (activePlacements(type).length) fillRow(id, [skeletons(4, 'pcard')]);
+    return;
+  }
+  fillRow('row-featured', activePlacements('featured').map(placementCard));
+  fillRow('row-profile', activePlacements('profile').map(placementCard));
+  const sp = activePlacements('sponsored'), st = currentSponsorState();
+  const states = [...new Set([st, ...sp.flatMap(p => p.states || [])])].filter(s => STATES[s]).sort((a, b) => STATES[a].localeCompare(STATES[b]));
+  $('sp-state').innerHTML = states.map(s => `<option value="${s}"${s === st ? ' selected' : ''}>${STATES[s]}</option>`).join('');
+  $('sp-state-name').textContent = STATES[st] || st;
+  const inState = sp.filter(p => (p.states || []).includes(st)).map(placementCard);
+  fillRow('row-sponsored', inState.length ? inState : ['<li class="pcard-empty">No sponsored lenders in this state yet.</li>']);
+  $('row-sponsored').hidden = !sp.length;
+}
+// A labeled slot above the ranked list for one sponsored lender in the property's state. Not numbered, not ranked.
+function renderSponsorSlot() {
+  const p = S.st && activePlacements('sponsored').find(p => (p.states || []).includes(S.st)), l = p && S.byId[p.id];
+  $('sponsor-slot').innerHTML = l ? `<div class="sslot"><span class="lbl">Sponsored</span>
+    <button type="button" class="ss-main" data-id="${l.id}" aria-label="Sponsored: ${esc(l.n)}, tier ${l.tier}. Open details"><span class="tier t${l.tier}">${l.tier}</span> <b>${esc(l.n)}</b> <span class="dim">${typeText(l)} · ${esc(l.ci)}, ${l.st}</span><span class="ss-blurb">${esc(p.blurb || '')}</span></button>
+    ${p.profile_url ? `<a href="${esc(p.profile_url)}" target="_blank" rel="noopener sponsored">View profile</a>` : ''}
+    <span class="hint">Sponsored placement. It does not change any lender's score, tier or position in the ranked list below.</span></div>` : '';
+}
+document.addEventListener('click', e => { const b = e.target.closest('.pc-main, .ss-main'); if (b && S.byId[b.dataset.id]) openLender(b.dataset.id); });
+document.querySelectorAll('.lrow-nav button').forEach(b => b.onclick = () => { const t = b.closest('.lrow').querySelector('.lrow-track'); t.scrollBy({ left: +b.dataset.dir * t.clientWidth * 0.9, behavior: 'smooth' }); });
+$('sp-state').onchange = e => setSponsorState(e.target.value);
+fetch('featured.json').then(r => r.ok ? r.json() : []).catch(() => []).then(a => { PL.all = Array.isArray(a) ? a : []; renderPlacements(); if (S.pt) renderSponsorSlot(); });
 
 /* ---------------- lender name search ---------------- */
 // NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU

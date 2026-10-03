@@ -1,0 +1,13 @@
+[
+  { "id": "B25883", "type": "featured", "states": ["IL"], "blurb": "Placeholder placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "B16835", "type": "featured", "states": ["TX"], "blurb": "Placeholder placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "C60705", "type": "featured", "states": ["TX"], "blurb": "Placeholder placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+
+  { "id": "B34334", "type": "profile", "states": ["IL"], "blurb": "Placeholder profile for layout testing. Not a real listing.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "B10709", "type": "profile", "states": ["TX"], "blurb": "Placeholder profile for layout testing. Not a real listing.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "C68671", "type": "profile", "states": ["CO"], "blurb": "Placeholder profile for layout testing. Not a real listing.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+
+  { "id": "B5595", "type": "sponsored", "states": ["TX"], "blurb": "Placeholder sponsored placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "B903", "type": "sponsored", "states": ["IL"], "blurb": "Placeholder sponsored placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true },
+  { "id": "B59052", "type": "sponsored", "states": ["CO"], "blurb": "Placeholder sponsored placement for layout testing. Not a real sponsorship.", "profile_url": "https://example.com/lender-profile", "start_date": "2026-01-01", "end_date": "2026-12-31", "paid": true, "placeholder": true }
+]
