@@ -574,6 +574,38 @@ document.querySelectorAll('.lrow-nav button').forEach(b => b.onclick = () => { c
 $('sp-state').onchange = e => setSponsorState(e.target.value);
 fetch('featured.json').then(r => r.ok ? r.json() : []).catch(() => []).then(a => { PL.all = Array.isArray(a) ? a : []; renderPlacements(); if (S.pt) renderSponsorSlot(); });
 
+/* ---------------- list / map divider: drag, arrow keys, double-click to reset (remembered per browser) ---------------- */
+function setListWidth(pct, save) {
+  pct = Math.max(30, Math.min(80, Math.round(pct)));
+  document.querySelector('.split').style.setProperty('--list-w', pct + '%'); $('divider').setAttribute('aria-valuenow', pct);
+  if (S.map) S.map.resize();
+  if (save) try { localStorage.setItem('lm.listW', pct); } catch (e) {}
+}
+(() => {
+  const d = $('divider'), split = () => document.querySelector('.split').getBoundingClientRect();
+  let raf = 0;
+  d.addEventListener('pointerdown', e => {
+    e.preventDefault(); d.setPointerCapture(e.pointerId); d.classList.add('dragging'); document.body.classList.add('resizing');
+    const move = ev => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { const r = split(); setListWidth((ev.clientX - r.left) / r.width * 100); }); };
+    const up = () => { d.removeEventListener('pointermove', move); d.classList.remove('dragging'); document.body.classList.remove('resizing'); setListWidth(+d.getAttribute('aria-valuenow'), true); };
+    d.addEventListener('pointermove', move); d.addEventListener('pointerup', up, { once: true }); d.addEventListener('pointercancel', up, { once: true });
+  });
+  d.addEventListener('keydown', e => { const v = +d.getAttribute('aria-valuenow'); if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); setListWidth(v + (e.key === 'ArrowRight' ? 5 : -5), true); } else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); setListWidth(e.key === 'Home' ? 30 : 80, true); } });
+  d.addEventListener('dblclick', () => setListWidth(60, true));
+  let saved = 60; try { saved = +localStorage.getItem('lm.listW') || 60; } catch (e) {}
+  setListWidth(saved, false);
+})();
+
+/* ---------------- phones: list or map, one at a time ---------------- */
+$('maptoggle').onclick = () => {
+  const show = !document.body.classList.contains('show-map');
+  document.body.classList.toggle('show-map', show);
+  $('maptoggle').textContent = show ? 'Show list' : 'Show map';
+  window.scrollTo(0, 0);
+  if (show && S.map) { S.map.resize(); if (S.pt) renderMap(); }
+};
+window.matchMedia('(min-width: 768px)').addEventListener('change', e => { if (e.matches) { document.body.classList.remove('show-map'); $('maptoggle').textContent = 'Show map'; if (S.map) S.map.resize(); } });
+
 /* ---------------- lender name search ---------------- */
 // NCUA names drop "credit union" ("TEXAS DOW EMPLOYEES"), so also match acronyms: TDE, TDECU, TDEFCU
 const NORM = s => (s || '').toUpperCase().replace(/&/g, ' AND ').replace(/[^A-Z0-9]+/g, ' ').trim();
