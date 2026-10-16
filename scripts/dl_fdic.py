@@ -1,6 +1,6 @@
 """Download FDIC BankFind data: quarterly financials 2016Q1-latest, institutions, locations, SOD 2016-latest."""
 import requests, json, os, sys, time
-sys.path.insert(0, os.path.dirname(__file__)); from fdic_fields import FIN_FIELDS
+sys.path.insert(0, os.path.dirname(__file__)); from fdic_fields import FIN_FIELDS, OPT_FIELDS
 RAW = os.path.join(os.path.dirname(__file__), '..', 'raw', 'fdic'); os.makedirs(RAW, exist_ok=True)
 API = "https://api.fdic.gov/banks/"
 S = requests.Session()
@@ -33,15 +33,31 @@ def quarters():
             if d > last: return
             yield d
 
+def ok_fields(fields):
+    try:
+        r = S.get(API + "financials", params={"filters": "CERT:3511", "fields": ",".join(["CERT"] + fields), "limit": 1}, timeout=60)
+        return r.status_code == 200 and "data" in r.json()
+    except Exception: return False
+
+def fin_fields():
+    """Core fields plus whichever optional fields the API accepts (a bad name must not break the build)."""
+    if ok_fields(OPT_FIELDS): return FIN_FIELDS + OPT_FIELDS
+    keep = [f for f in OPT_FIELDS if ok_fields([f])]
+    print("FDIC fields rejected:", [f for f in OPT_FIELDS if f not in keep])
+    return FIN_FIELDS + keep
+
 if __name__ == "__main__":
-    # 1. financials by quarter
+    # 1. financials by quarter. Cached quarters are re-downloaded when the field list changes.
+    fields = fin_fields(); sig = f"{RAW}/fin_fields.txt"
+    refetch = not os.path.exists(sig) or open(sig).read() != " ".join(fields)
     qs = list(quarters())
     for d in qs:
         fn = f"{RAW}/fin_{d}.json"
-        if os.path.exists(fn) and d != qs[-1]: continue
-        rows, total = fetch_all("financials", f"REPDTE:{d}", FIN_FIELDS)
+        if os.path.exists(fn) and d != qs[-1] and not refetch: continue
+        rows, total = fetch_all("financials", f"REPDTE:{d}", fields)
         assert len(rows) == total, (d, len(rows), total)
         json.dump(rows, open(fn, "w")); print("fin", d, len(rows), flush=True)
+    open(sig, "w").write(" ".join(fields))
     # 2. institutions (all, active and inactive) 
     INST = "CERT NAME ADDRESS CITY STALP ZIP LATITUDE LONGITUDE OFFICES ACTIVE BKCLASS CB ASSET DEP RSSDHCR NAMEHCR SPECGRP SPECGRPN REGAGNT WEBADDR ESTYMD ENDEFYMD PROCDATE STNAME COUNTY CBSA MUTUAL SUBCHAPS NEWCERT FEDCHRTR STCHRTR".split()
     fn = f"{RAW}/institutions.json"

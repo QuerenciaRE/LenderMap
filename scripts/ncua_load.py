@@ -10,7 +10,9 @@ Acct_400A Acct_400A1 Acct_400B1 Acct_400T1 Acct_400H Acct_400H2 Acct_400H3 Acct_
 Acct_143B Acct_143B3 Acct_143B4 Acct_143D3 Acct_718A Acct_718A3 Acct_718A4 Acct_042A5 Acct_042A6 Acct_042A7 Acct_042A8
 Acct_475A Acct_475A1 Acct_475B1 Acct_475H Acct_475H2 Acct_475J Acct_475J2 Acct_475K Acct_475K2 Acct_475K3 Acct_475M Acct_475L2 Acct_463A5
 Acct_090A Acct_090A1 Acct_090K Acct_090K2 Acct_090H2 Acct_090J2 Acct_090M Acct_041G Acct_041G3 Acct_041G4 Acct_041H1
-Acct_525 Acct_526 Acct_562B Acct_563A Acct_562A Acct_703A Acct_386A Acct_025A Acct_300 Acct_301 Acct_671 Acct_672 Acct_902 Acct_083""".split()
+Acct_525 Acct_526 Acct_562B Acct_563A Acct_562A Acct_703A Acct_386A Acct_025A Acct_300 Acct_301 Acct_671 Acct_672 Acct_902 Acct_083
+Acct_550 Acct_551 Acct_798A Acct_908A Acct_911""".split()
+NEW = ['ACCT_550', 'ACCT_551', 'ACCT_798A', 'ACCT_908A', 'ACCT_911']   # printed with NCUA's own descriptions each build, as a check
 
 def load_quarter(zpath):
     cycle = os.path.basename(zpath)[17:24]  # e.g. 2026-06
@@ -49,5 +51,11 @@ if __name__ == '__main__':
     for zp in sorted(glob.glob(f'{RAW}/call-report-data-*.zip')):
         w = load_quarter(zp); out.append(w); print(w['CYCLE'].iloc[0], len(w), w.shape[1], flush=True)
     allq = pd.concat(out, ignore_index=True)
+    try:   # NCUA ships an account dictionary in each zip: log what the newer accounts are called
+        z = zipfile.ZipFile(sorted(glob.glob(f'{RAW}/call-report-data-*.zip'))[-1])
+        n = next(n for n in z.namelist() if n.lower().startswith('acctdesc'))
+        d = pd.read_csv(z.open(n), encoding='latin-1', dtype=str); d.columns = [c.upper() for c in d.columns]
+        print(d[d.iloc[:, 0].str.upper().isin(NEW)].iloc[:, :3].to_string(index=False))
+    except Exception as e: print('AcctDesc not checked:', e)
     allq.to_parquet(os.path.join(RAW, '..', '..', 'data', 'ncua_raw.parquet'), index=False)
     print(allq.shape)

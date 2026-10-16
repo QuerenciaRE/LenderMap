@@ -10,6 +10,7 @@ D = os.path.join(os.path.dirname(__file__), '..', 'data')
 def banks():
     f = pd.read_parquet(f'{D}/fdic_fin_raw.parquet')
     K = 1000.0
+    opt = lambda c: f[c] if c in f.columns else np.nan   # optional fields added after the first build
     o = pd.DataFrame({
         'lender_id': 'B' + f['CERT'].astype(str),
         'charter': 'bank',
@@ -33,6 +34,13 @@ def banks():
         'brokered': f['BRO'] * K,
         'brokered_flag': (f['BRO'] > 0).astype(float),
         'nonmember_deposits': np.nan,
+        'free_deposits': f['DEPNI'] * K,          # non-interest-bearing deposits
+        'time_deposits': opt('NTRTIME') * K,
+        'money_market': opt('NTRSMMDA') * K,
+        'net_chargeoffs_ytd': f['NTLNLS'] * K,
+        'cre_net_chargeoffs_ytd': (f['NTRENRES'].fillna(0) + f['NTREMULT'].fillna(0) + f['NTRECONS'].fillna(0)) * K,
+        'reo': opt('ORE') * K,                    # other real estate owned
+        'past_due_30_89': f['P3LNLS'] * K,
         'int_income_ytd': f['INTINC'] * K,
         'int_expense_ytd': f['EINTEXP'] * K,
         'nii_ytd': f['NIM'] * K,
@@ -66,6 +74,7 @@ def cus():
     new_cycles = set(tot[tot > 0].index)
     r['new_form'] = r['CYCLE'].isin(new_cycles)
     n = r['new_form']
+    col = lambda c: r[c] if c in r.columns else pd.Series(np.nan, index=r.index)
     def pick(new_cols, old_cols):
         newv = r[new_cols].sum(axis=1, min_count=1)
         oldv = r[old_cols].sum(axis=1, min_count=1)
@@ -93,6 +102,13 @@ def cus():
         'brokered': np.nan,                       # NCUA reports no brokered-deposit dollar amount (Acct_788 = brokered CDs held as investments; Acct_879T = Y/N flag)
         'brokered_flag': pd.to_numeric(r['ACCT_879T'], errors='coerce'),
         'nonmember_deposits': r['ACCT_880'],
+        'free_deposits': np.nan,                  # NCUA reports no non-interest-bearing split
+        'time_deposits': col('ACCT_908A'),        # share certificates
+        'money_market': col('ACCT_911'),          # money market shares
+        'net_chargeoffs_ytd': col('ACCT_550') - col('ACCT_551').fillna(0),
+        'cre_net_chargeoffs_ytd': np.nan,
+        'reo': col('ACCT_798A'),                  # foreclosed and repossessed assets (all types, not just real estate)
+        'past_due_30_89': np.nan,
         'int_income_ytd': r['ACCT_115'],
         'int_expense_ytd': r['ACCT_350'],
         'nii_ytd': r['ACCT_115'] - r['ACCT_350'],
@@ -161,6 +177,12 @@ def add_metrics(m):
     m['nonmember_dep_pct'] = m['nonmember_deposits'] / m['deposits'] * 100
     m['npl_pct'] = m['npl'] / m['loans'] * 100
     m['cre_npl_pct'] = m['cre_npl'] / m['cre_total'].where(m['cre_total'] > 0) * 100
+    m['free_deposits_pct'] = m['free_deposits'] / m['deposits'] * 100
+    m['time_deposits_pct'] = m['time_deposits'] / m['deposits'] * 100
+    m['money_market_pct'] = m['money_market'] / m['deposits'] * 100
+    m['nco_pct'] = m['net_chargeoffs_ytd'] * ann / m['avg_loans'] * 100
+    m['cre_nco_pct'] = m['cre_net_chargeoffs_ytd'] * ann / m['cre_total'].where(m['cre_total'] > 0) * 100
+    m['reo_pct_assets'] = m['reo'] / m['assets'] * 100
     m['cre_net_change_ytd'] = m['cre_total'] - m['cre_total_pye']
     m['cre_investment_net_change_ytd'] = m['cre_investment'] - m['cre_investment_pye']
     m['cre_granted_avg_loan'] = m['cre_granted_ytd'] / m['cre_granted_ytd_n'].replace(0, np.nan)
@@ -183,4 +205,6 @@ if __name__ == '__main__':
     m = pd.concat([b, c], ignore_index=True)
     m = add_metrics(m)
     m.to_parquet(f'{D}/metrics_quarterly.parquet', index=False)
+    lq = m[m['period'] == m['period'].max()]   # coverage of the newer fields: a blank column means a source field name is wrong
+    print('filled, latest quarter:', {f'{c} {ch}': f"{lq.loc[lq['charter'] == ch, c].notna().mean():.0%}" for c in ['free_deposits', 'time_deposits', 'money_market', 'net_chargeoffs_ytd', 'reo'] for ch in ['bank', 'cu']})
     print(m.shape); print(m.groupby(['charter', 'period']).size().unstack(0).tail(3))

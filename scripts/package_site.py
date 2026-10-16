@@ -84,6 +84,9 @@ KEYS = [  # (json key, column, kind)
     ('caprem', 'cre_cap_remaining', 'musd'), ('consrem', 'constr_cap_remaining', 'musd'), ('mblused', 'mbl_cap_used_pct', 'p'), ('mblrem', 'mbl_cap_remaining', 'musd'),
     ('rate', 'cre_rate_pct', 'p'), ('yield', 'loan_yield_pct', 'p'), ('npl', 'npl_pct', 'p'), ('crenpl', 'cre_npl_pct', 'p'), ('roa', 'roa_pct', 'p'),
     ('limit', 'lending_limit_est', 'musd'), ('capbase', 'total_rbc', 'musd'), ('depgro', 'deposit_growth_pct', 'p'), ('emp', 'employees', 'i'),
+    ('free', 'free_deposits', 'musd'), ('freep', 'free_deposits_pct', 'p'), ('cd', 'time_deposits', 'musd'), ('cdp', 'time_deposits_pct', 'p'), ('mm', 'money_market', 'musd'), ('mmp', 'money_market_pct', 'p'),
+    ('nco', 'net_chargeoffs_ytd', 'musd'), ('ncop', 'nco_pct', 'p'), ('crenco', 'cre_net_chargeoffs_ytd', 'musd'), ('crencop', 'cre_nco_pct', 'p'),
+    ('reo', 'reo', 'musd'), ('reop', 'reo_pct_assets', 'p'), ('pd30', 'past_due_30_89', 'musd'),
 ]
 def conv(row, key, col, kind):
     v = row[col]
@@ -98,7 +101,7 @@ for _, row in lat.iterrows():
          'licu': bool(row['licu'] == 1) if row['charter'] == 'cu' else None, 'captype': 'Net worth' if row['charter'] == 'cu' else ('Tier 1 + allowance (CBLR)' if row['cblr_bank'] == 1 else 'Total risk-based capital'),
          'cty': cty(row['hq_county']), 'nb': int(row['n_branches']), 'bdep': musd(row['branch_deposits']), 'per': f"{row['period'].year % 100}Q{row['quarter']}"}
     for k, col, kind in KEYS:
-        if k in ('fcp', 'nimp', 'emp', 'conscap', 'consrem', 'depgro'): continue
+        if k in ('fcp', 'nimp', 'emp', 'depgro'): continue
         o[k] = conv(row, k, col, kind)
     o['sc'] = {k: r(row['c_' + k], 1) for k in ['mom_inv', 'mom_oo', 'fr_inv', 'fr_oo', 'gro', 'qual', 'cap', 'mar']}
     o['pen'] = r(row['penalty'], 2)
