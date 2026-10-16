@@ -14,49 +14,24 @@
 <body class="landing">
 <header id="top">
   <a class="brand" href="./">CRE Lender Finder</a>
-  <div id="hdr-search"><button type="button" id="pill-compact" aria-expanded="false" aria-controls="hdr-drop"><span id="pc-addr">Address</span><span id="pc-occ">Investment</span><span id="pc-amt">Any amount</span><span id="pc-types">All types</span><span class="pc-go">Search</span></button></div>
-  <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Find a lender, e.g. TDECU" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
+  <div id="hdr-search"><button type="button" id="pill-compact" aria-expanded="false" aria-controls="hdr-drop"><span id="pc-addr">Address</span><span class="pc-go">Search</span></button></div>
   <nav><button type="button" class="link" id="btn-defs">Definitions</button><button type="button" class="link" id="btn-about">About &amp; sources</button></nav>
 </header>
 <div id="hdr-drop" hidden></div>
-<div id="macro-line" class="macro"></div>
 
 <section id="landing">
   <div class="hero">
     <h1>Find the lenders most likely to finance your property</h1>
-    <p class="subtitle" id="meta-line">Loading data…</p>
     <div id="search-home">
       <div id="searchbar" role="search">
         <div class="seg seg-addr">
           <label class="seg-lbl" for="addr">Address</label>
           <input id="addr" type="text" placeholder="Street, city and state, or ZIP" autocomplete="off">
         </div>
-        <div class="seg seg-pop" data-pop="pop-occ">
-          <span class="seg-lbl" id="lbl-occ">Loan use</span>
-          <button type="button" class="seg-btn" aria-haspopup="true" aria-expanded="false" aria-controls="pop-occ" aria-describedby="lbl-occ" id="occ-val">Investment</button>
-          <div class="pop" id="pop-occ" hidden>
-            <label class="pop-row"><span><b>Investment property</b><span class="dim">Non-owner-occupied, multifamily, construction</span></span><input type="radio" name="occ-r" value="inv" checked></label>
-            <label class="pop-row"><span><b>Owner-occupied</b><span class="dim">The borrower's business occupies the property</span></span><input type="radio" name="occ-r" value="oo"></label>
-            <select id="occ" hidden><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select>
-          </div>
-        </div>
-        <div class="seg">
-          <label class="seg-lbl" for="amt">Amount</label>
-          <input id="amt" type="text" placeholder="Any amount" autocomplete="off" inputmode="decimal">
-        </div>
-        <div class="seg seg-pop" data-pop="pop-types">
-          <span class="seg-lbl" id="lbl-types">Lender type</span>
-          <button type="button" class="seg-btn" aria-haspopup="true" aria-expanded="false" aria-controls="pop-types" aria-describedby="lbl-types" id="types-val">All types</button>
-          <div class="pop pop-right" id="pop-types" hidden>
-            <label class="pop-row"><span><b>Commercial banks</b></span><input type="checkbox" id="f-bank" checked></label>
-            <label class="pop-row"><span><b>Savings institutions / thrifts</b></span><input type="checkbox" id="f-thrift" checked></label>
-            <label class="pop-row"><span><b>Credit unions</b><span class="dim">Membership rules apply; see Filters</span></span><input type="checkbox" id="f-cu" checked></label>
-          </div>
-        </div>
         <button id="go" class="primary" type="button">Search</button>
       </div>
       <div id="addr-result" class="hint"></div>
-      <div class="hint amt-hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request. Dollars or $M both work.</div>
+      <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Or find a lender by name" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
     </div>
   </div>
 
@@ -81,7 +56,7 @@
     <h2 id="how-h">How it works</h2>
     <ol>
       <li><span class="lbl">Step 1</span><b>Enter the property</b><span>An address, a city and state, or a ZIP code.</span></li>
-      <li><span class="lbl">Step 2</span><b>See nearby lenders, ranked</b><span>Every bank and credit union near the property, scored A to E on how likely they are to make commercial real estate loans now.</span></li>
+      <li><span class="lbl">Step 2</span><b>See local lenders first</b><span>Banks and credit unions headquartered in the property's county, then lenders based elsewhere in the state with a branch in the county or within a few miles.</span></li>
       <li><span class="lbl">Step 3</span><b>Open any lender</b><span>Ten years of call-report history, every branch, and the numbers behind the score.</span></li>
     </ol>
   </section>
@@ -96,23 +71,30 @@
     <button type="button" class="chip" data-type="f-bank" aria-pressed="true">Banks</button>
     <button type="button" class="chip" data-type="f-thrift" aria-pressed="true">Thrifts</button>
     <button type="button" class="chip" data-type="f-cu" aria-pressed="true">Credit unions</button>
-    <span class="chip-sep" aria-hidden="true"></span>
-    <button type="button" class="chip" id="chip-amt">Add amount</button>
-    <button type="button" class="chip" id="chip-geo">HQ within 10 mi</button>
   </div>
   <div class="split">
     <section id="listpane" aria-label="Lenders">
       <div class="list-head">
-        <h2 id="list-title">Lenders</h2>
         <p id="summary" class="subtitle">Enter an address to begin.</p>
-        <div class="tools">
-          <div class="viewtoggle" role="group" aria-label="View"><button type="button" id="v-cards" aria-pressed="true">Cards</button><button type="button" id="v-table" aria-pressed="false">Table</button></div>
-          <button id="csv" type="button" disabled>Download CSV</button>
-        </div>
+        <div class="tools"><button id="csv" type="button" disabled>Download CSV</button></div>
       </div>
       <div id="sponsor-slot"></div>
-      <ol id="cards" class="lcards" aria-label="Ranked lenders"></ol>
-      <div class="tablewrap" id="tablewrap" hidden><table id="tbl"><thead></thead><tbody></tbody></table></div>
+      <section class="lgroup" aria-labelledby="lt-hq">
+        <h2 id="lt-hq">Headquartered in the county</h2>
+        <p class="lg-sub" id="ls-hq"></p>
+        <ol id="cards-hq" class="lcards" aria-labelledby="lt-hq"></ol>
+      </section>
+      <section class="lgroup" aria-labelledby="lt-br">
+        <h2 id="lt-br">Headquartered in the state, with a branch nearby</h2>
+        <div class="brmode">
+          <div class="segctl" role="radiogroup" aria-label="Branch location">
+            <label><input type="radio" name="brmode" value="county" checked><span id="bm-county">Branch in the county</span></label>
+            <label><input type="radio" name="brmode" value="miles"><span>Branch within <input id="r-br" type="number" value="10" min="1" max="200" class="num" aria-label="Miles from the property"> mi</span></label>
+          </div>
+        </div>
+        <p class="lg-sub" id="ls-br"></p>
+        <ol id="cards-br" class="lcards" aria-labelledby="lt-br"></ol>
+      </section>
     </section>
     <div id="divider" role="separator" aria-orientation="vertical" aria-label="Resize list and map. Drag, or use the left and right arrow keys. Double-click to reset." aria-valuemin="30" aria-valuemax="80" aria-valuenow="60" tabindex="0"></div>
     <aside id="mappane" aria-label="Map"><div id="map"></div></aside>
@@ -124,17 +106,20 @@
   <div class="fm-head"><h2 id="f-title">Filters</h2><button type="button" class="close" id="filters-close">Close</button></div>
   <div class="fm-body">
     <section>
-      <h3>Lender geography</h3>
-      <div class="segctl" role="radiogroup" aria-label="Lender geography">
-        <label><input type="radio" name="mode" value="hq" checked><span>HQ nearby</span></label>
-        <label><input type="radio" name="mode" value="state"><span>In state + branch nearby</span></label>
+      <h3>Loan</h3>
+      <div class="segctl" role="radiogroup" aria-label="Loan use">
+        <label><input type="radio" name="occ-r" value="inv" checked><span>Investment property</span></label>
+        <label><input type="radio" name="occ-r" value="oo"><span>Owner-occupied</span></label>
       </div>
-      <div class="geo geo-hq"><label class="fm-row">Headquarters within <input id="r-hq" type="number" value="10" min="1" max="500" class="num"> miles of the property</label></div>
-      <div class="geo geo-state">
-        <label class="fm-row">Headquarters in the property's state, or within <input id="r-hq2" type="number" value="100" min="0" max="1000" class="num"> miles</label>
-        <label class="fm-row">and a branch within <input id="r-br" type="number" value="5" min="1" max="200" class="num"> miles</label>
-      </div>
-      <p class="hint">"HQ nearby" lists lenders headquartered close by. "In state + branch nearby" also finds larger lenders headquartered elsewhere in the state that run a branch near the property.</p>
+      <select id="occ" hidden><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select>
+      <label class="fm-row">Loan amount <input id="amt" type="text" placeholder="Any amount" autocomplete="off" inputmode="decimal" class="num wide"></label>
+      <p class="hint">Amount drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request. Dollars or $M both work.</p>
+    </section>
+    <section>
+      <h3>Lender types</h3>
+      <label class="pop-row"><span><b>Commercial banks</b></span><input type="checkbox" id="f-bank" checked></label>
+      <label class="pop-row"><span><b>Savings institutions / thrifts</b></span><input type="checkbox" id="f-thrift" checked></label>
+      <label class="pop-row"><span><b>Credit unions</b></span><input type="checkbox" id="f-cu" checked></label>
     </section>
     <section>
       <h3>Membership and CRE</h3>
@@ -162,7 +147,6 @@
 
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="modal-inner"><button type="button" class="close" id="modal-close">Close</button><div id="modal-content"></div></div></div>
 
-<footer>Data: FDIC BankFind Suite (Call Reports, Summary of Deposits), NCUA 5300 Call Reports and branch files, FRED. As reported by each institution; no adjustments. This is a research tool, not a recommendation or an offer of credit. <span id="built"></span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js"></script>
 <script src="app.js"></script>

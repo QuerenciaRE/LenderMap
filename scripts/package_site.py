@@ -54,6 +54,15 @@ pen = np.where(bank & (lat['constr_pct_capital'] > 150), pen * 0.9, pen)
 pen = np.where(~bank & (lat['mbl_cap_used_pct'] > 90) & (lat['mbl_cap_used_pct'] <= 100), pen * 0.8, pen)
 lat['penalty'] = pen
 
+# HQ county (property-county list on the site): the main office's county from the branch files, else the FDIC institution county.
+# Raw names go out as-is (title case); app.js normalizes both sides ("Cook County" = "COOK", "St. Louis City" = "Saint Louis city").
+B['county'] = B['county'].where(B['county'].notna() & ~B['county'].isin(['None', 'nan', '']), None)
+mo = B[B['main_office'] & B['county'].notna()].merge(L[['lender_id', 'state']].rename(columns={'state': 'hq_st'}), on='lender_id')
+mo = pd.concat([mo[mo['state'] == mo['hq_st']], mo]).drop_duplicates('lender_id').set_index('lender_id')['county']
+lat['hq_county'] = lat['lender_id'].map(mo)
+if 'county' in L.columns: lat['hq_county'] = lat['hq_county'].fillna(lat['lender_id'].map(L.set_index('lender_id')['county'].where(lambda s: s.notna() & (s != ''))))
+def cty(x): return x.title() if isinstance(x, str) and x.isupper() else (x if isinstance(x, str) else None)
+
 nb = B.groupby('lender_id').size(); bdep = B.groupby('lender_id')['deposits'].sum(min_count=1)
 lat['n_branches'] = lat['lender_id'].map(nb).fillna(0).astype(int); lat['branch_deposits'] = lat['lender_id'].map(bdep)
 
@@ -90,7 +99,7 @@ for _, row in lat.iterrows():
          'lat': r(row['lat'], 5), 'lon': r(row['lon'], 5), 'web': row['website'] if isinstance(row['website'], str) else None, 'hc': row['holding_company'] if isinstance(row['holding_company'], str) else None,
          'cb': bool(row['community_bank'] == 1) if row['charter'] == 'bank' else None, 'fom': row['fom_class'] if isinstance(row['fom_class'], str) else None,
          'licu': bool(row['licu'] == 1) if row['charter'] == 'cu' else None, 'captype': 'Net worth' if row['charter'] == 'cu' else ('Tier 1 + allowance (CBLR)' if row['cblr_bank'] == 1 else 'Total risk-based capital'),
-         'nb': int(row['n_branches']), 'bdep': musd(row['branch_deposits']), 'per': f"{row['period'].year % 100}Q{row['quarter']}"}
+         'cty': cty(row['hq_county']), 'nb': int(row['n_branches']), 'bdep': musd(row['branch_deposits']), 'per': f"{row['period'].year % 100}Q{row['quarter']}"}
     for k, col, kind in KEYS:
         if k in ('fcp', 'nimp', 'emp', 'depgro'): continue
         o[k] = conv(row, k, col, kind)
@@ -100,7 +109,7 @@ for _, row in lat.iterrows():
 json.dump(out, open(f'{SITE}/lenders.json', 'w'), separators=(',', ':'))
 print('lenders.json', len(out), os.path.getsize(f'{SITE}/lenders.json') // 1024, 'KB; CU with coords:', sum(1 for o in out if o['c'] == 'C' and o['lat']))
 
-# ---- branches: compact arrays. [branch_id, lender_id, lat, lon, name, city, st, zip, main, [deposits $K by year 2016..latest]]
+# ---- branches: compact arrays. [branch_id, lender_id, lat, lon, name, city, st, zip, main, [deposits $K by year 2016..latest], county]
 yrs = sorted([c for c in B.columns if c.startswith('dep_')])
 if geo is not None:
     gb = geo[~geo['branch_id'].str.endswith('-HQ')].set_index('branch_id')[['lat', 'lon']]
@@ -108,11 +117,11 @@ if geo is not None:
     B.loc[isc, 'lat'] = B.loc[isc, 'branch_id'].map(gb['lat']); B.loc[isc, 'lon'] = B.loc[isc, 'branch_id'].map(gb['lon'])
 keep = B[B['lender_id'].isin(set(lat['lender_id'])) & B['lat'].notna()]
 depm = (keep[yrs] / 1000).round().to_numpy()
-cols_ = keep[['branch_id', 'lender_id', 'lat', 'lon', 'name', 'city', 'state', 'zip', 'main_office']].to_numpy()
+cols_ = keep[['branch_id', 'lender_id', 'lat', 'lon', 'name', 'city', 'state', 'zip', 'main_office', 'county']].to_numpy()
 arr = []
 for i in range(len(keep)):
     c_ = cols_[i]; deps = [None if np.isnan(v) else int(v) for v in depm[i]]
-    arr.append([c_[0], c_[1], round(float(c_[2]), 5), round(float(c_[3]), 5), c_[4], (c_[5].title() if c_[0][0] == 'C' and isinstance(c_[5], str) else c_[5]), c_[6], c_[7], 1 if c_[8] else 0, deps])
+    arr.append([c_[0], c_[1], round(float(c_[2]), 5), round(float(c_[3]), 5), c_[4], (c_[5].title() if c_[0][0] == 'C' and isinstance(c_[5], str) else c_[5]), c_[6], c_[7], 1 if c_[8] else 0, deps, cty(c_[9])])
 os.makedirs(f'{SITE}/branches', exist_ok=True)
 bystate, bbox = {}, {}
 for a in arr:

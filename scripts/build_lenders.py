@@ -18,7 +18,7 @@ def banks():
         'active': i['ACTIVE'] == 1, 'closed_date': i['ENDEFYMD'], 'successor_id': np.where(i['NEWCERT'].fillna(0) > 0, 'B' + i['NEWCERT'].fillna(0).astype(int).astype(str), None),
         'offices': i['OFFICES'], 'website': i['WEBADDR'], 'holding_company': i['NAMEHCR'], 'bkclass': i['BKCLASS'],
         'charter_class': np.where(i['BKCLASS'] == 'OI', 'Insured branch of foreign bank', np.where(thrift, 'Savings institution', 'Commercial bank')),
-        'community_bank': i['CB'] == 1, 'specialization': i['SPECGRPN'], 'fom_class': None, 'licu': None, 'established': i['ESTYMD'],
+        'community_bank': i['CB'] == 1, 'specialization': i['SPECGRPN'], 'fom_class': None, 'licu': None, 'established': i['ESTYMD'], 'county': i['COUNTY'],
     })
 
 def cus():
