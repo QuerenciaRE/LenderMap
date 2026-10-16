@@ -15,25 +15,23 @@
 <header id="top">
   <a class="brand" href="./">CRE Lender Finder</a>
   <div id="hdr-search"><button type="button" id="pill-compact" aria-expanded="false" aria-controls="hdr-drop"><span id="pc-addr">Address</span><span class="pc-go">Search</span></button></div>
-  <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Find a lender, e.g. TDECU" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
   <nav><button type="button" class="link" id="btn-defs">Definitions</button><button type="button" class="link" id="btn-about">About &amp; sources</button></nav>
 </header>
 <div id="hdr-drop" hidden></div>
-<div id="macro-line" class="macro"></div>
 
 <section id="landing">
   <div class="hero">
     <h1>Find the lenders most likely to finance your property</h1>
-    <p class="subtitle" id="meta-line">Loading data…</p>
     <div id="search-home">
       <div id="searchbar" role="search">
         <div class="seg seg-addr">
           <label class="seg-lbl" for="addr">Address</label>
-          <input id="addr" type="text" placeholder="Property address: street, city and state, or ZIP" autocomplete="off">
+          <input id="addr" type="text" placeholder="Street, city and state, or ZIP" autocomplete="off">
         </div>
         <button id="go" class="primary" type="button">Search</button>
       </div>
       <div id="addr-result" class="hint"></div>
+      <div class="lsearch"><label class="vh" for="lname">Find a lender by name</label><input id="lname" type="text" placeholder="Or find a lender by name" autocomplete="off"><div id="lsugg" class="hidden" role="listbox"></div></div>
     </div>
   </div>
 
@@ -149,7 +147,6 @@
 
 <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="modal-inner"><button type="button" class="close" id="modal-close">Close</button><div id="modal-content"></div></div></div>
 
-<footer>Data: FDIC BankFind Suite (Call Reports, Summary of Deposits), NCUA 5300 Call Reports and branch files, FRED. As reported by each institution; no adjustments. This is a research tool, not a recommendation or an offer of credit. <span id="built"></span></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js"></script>
 <script src="app.js"></script>

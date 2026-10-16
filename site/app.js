@@ -54,14 +54,10 @@ const COLS = [
 
 /* ---------------- load ---------------- */
 async function load() {
-  const [meta, lj, bi, macro] = await Promise.all(['meta.json', 'lenders.json', 'branch_index.json', 'macro.json'].map(f => fetch(CFG.data + f).then(r => r.json())));
+  const [meta, lj, bi] = await Promise.all(['meta.json', 'lenders.json', 'branch_index.json'].map(f => fetch(CFG.data + f).then(r => r.json())));
   const lenders = lj.rows.map(r => Object.fromEntries(lj.cols.map((k, i) => [k, r[i]])));
   S.meta = meta; S.lenders = lenders; S.years = bi.years; S.brBox = bi.states; S.brLoaded = {}; S.branches = []; S.brById = {};
   lenders.forEach(l => { S.byId[l.id] = l; l.ck = CTY(l.cty); });
-  const i = macro.q.length - 1;
-  $('meta-line').textContent = `${meta.latest} call reports · ${meta.n_banks.toLocaleString()} banks · ${meta.n_cus.toLocaleString()} credit unions · ${meta.n_branches.toLocaleString()} branches`;
-  $('macro-line').textContent = `${macro.q[i]} avg: Fed funds ${macro.fedfunds[i]}% · SOFR ${macro.sofr[i]}% · 5y ${macro.dgs5[i]}% · 10y ${macro.dgs10[i]}% · banks tightening CRE standards (net %): ${macro.sloos_cre_tight[i]}`;
-  $('built').textContent = `Data built ${meta.built}.`;
   if (CFG.offline) { $('csv').style.display = 'none'; $('addr').placeholder = 'ZIP code, e.g. 60606 — or click the map'; $('addr-result').textContent = 'Preview build: enter a 5-digit ZIP or click the map to drop a pin. The hosted site accepts full street addresses and shows a street basemap.'; }
   else $('addr-result').textContent = 'Street address, city and state, or a ZIP code. After a search you can also click the map to drop a pin.';
   rescoreAll(); renderPlacements(); updateSummaries();
@@ -449,6 +445,7 @@ function showModal(html) { $('modal-content').innerHTML = html; openDialog('moda
 $('btn-defs').onclick = e => { e.preventDefault(); showModal('<h2>Definitions</h2><dl class="defs">' + DEFS.map(d => `<dt>${d[0]}</dt><dd>${d[1]}</dd>`).join('') + '</dl>'); };
 $('btn-about').onclick = e => { e.preventDefault(); showModal(`<h2>About</h2><p>Free tool for commercial real estate borrowers to find the depository lenders most likely to lend on a property, using only public regulatory filings. Nothing here is a recommendation, an offer of credit, or a statement by any lender.</p>
 <dl class="defs"><dt>Sources</dt><dd>FDIC BankFind Suite API (institutions, locations, quarterly financials from Call Reports, Summary of Deposits); NCUA 5300 Call Report quarterly data and Credit Union Branch Information files; FRED (fed funds, SOFR, Treasury yields, Senior Loan Officer Survey); U.S. Census Bureau geocoder; OpenStreetMap / Photon for address lookup; OpenFreeMap tiles.</dd>
+<dt>Data</dt><dd>${S.meta ? `${esc(S.meta.latest)} call reports, built ${esc(S.meta.built)}. ` : ''}As reported by each institution; no adjustments.</dd>
 <dt>Refresh</dt><dd>Bank and credit-union call reports are published roughly 60 days after each quarter end; branch deposits once a year (June 30 data, published late September). The site rebuilds automatically when new data appears.</dd>
 <dt>Method notes</dt><dd>A panel of ${(430927).toLocaleString()} lender-quarters (2016-2026) was used to test which current metrics predict the next four quarters of CRE growth. The strongest, in order: trailing CRE growth, CRE share of loans, CRE and construction as % of capital, size, deposit growth; non-performing loans reduce it. Capital headroom only matters at the extremes. Those findings set the default weights and penalties; weights are adjustable.</dd></dl>`); };
 /* dialogs (drawer, Definitions/About modal, Filters): focus moves in, Tab stays inside, Esc or Close returns focus */

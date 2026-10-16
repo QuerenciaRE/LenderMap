@@ -53,12 +53,10 @@ header#top { position: sticky; top: 0; z-index: 30; display: flex; align-items: 
 #hdr-search { flex: 1; display: flex; justify-content: center; min-width: 0; }
 header nav { display: flex; gap: 16px; }
 header nav button.link { font-size: 13.5px; }
-.macro { font-size: 12px; color: var(--muted); padding: 6px 32px; border-bottom: 1px solid var(--line); background: var(--soft); font-variant-numeric: tabular-nums; }
-body.results .macro { display: none; }
 
 /* lender name search */
-.lsearch { position: relative; width: 240px; }
-.lsearch input { width: 100%; border-radius: var(--r-pill); padding: 8px 14px; }
+.lsearch { position: relative; width: min(420px, 100%); margin: 16px auto 0; text-align: left; }
+.lsearch input { width: 100%; border-radius: var(--r-pill); padding: 10px 16px; }
 #lsugg { position: absolute; left: 0; right: 0; top: calc(100% + 6px); min-width: 320px; z-index: 40; background: #fff; border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow-lg); max-height: 380px; overflow-y: auto; padding: 6px; }
 #lsugg.hidden { display: none; }
 #lsugg .opt { padding: 8px 10px; cursor: pointer; border-radius: 8px; font-size: 13.5px; }
@@ -69,7 +67,7 @@ body.results .macro { display: none; }
 /* landing */
 #landing { flex: 1; padding: 56px 32px 40px; }
 .hero { max-width: 900px; margin: 0 auto; text-align: center; }
-.hero .subtitle { margin-bottom: 28px; }
+.hero h1 { margin-bottom: 28px; }
 body.results #landing { display: none; }
 
 /* search bar: segmented pill */
@@ -132,7 +130,6 @@ th:first-child, td:first-child { text-align: left; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: var(--r-pill); font-size: 11.5px; font-weight: 500; color: #fff; }
 .badge.B { background: var(--bank); } .badge.C { background: var(--cu); }
 
-footer { padding: 14px 32px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--soft); }
 
 /* chip row */
 #chipbar { position: sticky; top: var(--hdr); z-index: 20; display: flex; align-items: center; gap: 8px; padding: 12px 32px; background: #fff; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
@@ -209,7 +206,6 @@ dl.defs dt { font-weight: 500; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
 
 @media (max-width: 900px) {
   header#top { padding: 10px 16px; flex-wrap: wrap; }
-  .macro { padding: 6px 16px; }
 }
 
 /* lender cards */
@@ -316,7 +312,6 @@ dl.defs dt { font-weight: 500; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
   #hdr-search { order: 3; flex-basis: 100%; }
   body.landing #hdr-search { display: none; }
   body.landing { --hdr: 72px; }
-  .lsearch { width: 220px; }
   .lrow-track { grid-auto-columns: minmax(220px, calc((100% - 40px) / 3)); }
 }
 
@@ -328,11 +323,9 @@ dl.defs dt { font-weight: 500; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
   header nav { gap: 10px; }
   header nav button.link { font-size: 13px; }
   #hdr-search { order: 3; flex-basis: 100%; }
-  .lsearch { order: 4; width: 100%; }
   #pill-compact { width: 100%; max-width: none; }
   #pill-compact > span:first-child { flex: 1; max-width: none; }
   #hdr-drop { position: static; padding: 16px; }
-  .macro { display: none; }
   #landing { padding: 28px 16px 24px; }
   #searchbar { flex-direction: column; align-items: stretch; border-radius: 24px; padding: 8px; }
   #searchbar.active { background: #fff; border-color: var(--line-2); }
@@ -363,5 +356,4 @@ dl.defs dt { font-weight: 500; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
   .w { grid-template-columns: 100px 1fr 28px; }
   .drawer-inner { width: 100vw; border-radius: 0; padding: 20px 16px; }
   .modal-inner { width: 100vw; max-height: 100vh; height: 100%; border-radius: 0; padding: 20px 16px; }
-  footer { padding: 14px 16px 80px; }
 }
