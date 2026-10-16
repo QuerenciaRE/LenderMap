@@ -51,6 +51,11 @@ the scorecard, and the roadmap.
 - Credit-union HQ coordinates come from Census batch geocoding (free) with ZIP-centroid fallback; FDIC supplies bank
   coordinates. Address lookup in the browser uses Photon (OpenStreetMap), Nominatim fallback, then ZIP centroid.
 - Mergers: history is as reported per charter; no restatement.
+- Engine-only fields (in lenders.json/history, not yet shown in the UI): free deposits (bank DEPNI; CUs report none),
+  CDs (bank NTRTIME, CU Acct_908A), money market (bank NTRSMMDA, CU Acct_911), net charge-offs (bank NTLNLS, CU
+  Acct_550-551; CRE charge-offs banks only), REO (bank ORE = real estate only; CU Acct_798A = all foreclosed and
+  repossessed assets, autos included), bank 30-89 days past due. Optional FDIC fields are probed in `dl_fdic.py` and
+  dropped if the API rejects them; `build_metrics.py` logs how many lenders have each field filled.
 
 ## Scorecard (client-side, `app.js::scoreOf`)
 
