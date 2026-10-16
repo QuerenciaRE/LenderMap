@@ -282,12 +282,12 @@ function initMap() {
   const lg = document.createElement('div'); lg.className = 'legend'; lg.innerHTML = Object.entries(TIERC).map(([t, c]) => `<span style="color:${c}">Tier ${t}</span>`).join('') + '<span>Letters: headquarters</span><span>Dots: branches</span><span>Ring: property</span>'; $('map').appendChild(lg);
   S.map.on('load', () => {
     S.map.addSource('circle', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    S.map.addLayer({ id: 'circle', type: 'fill', source: 'circle', paint: { 'fill-color': '#2d6fd1', 'fill-opacity': 0.06 } });
-    S.map.addLayer({ id: 'circle-line', type: 'line', source: 'circle', paint: { 'line-color': '#2d6fd1', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
+    S.map.addLayer({ id: 'circle', type: 'fill', source: 'circle', paint: { 'fill-color': '#BB7125', 'fill-opacity': 0.06 } });
+    S.map.addLayer({ id: 'circle-line', type: 'line', source: 'circle', paint: { 'line-color': '#BB7125', 'line-width': 1.5, 'line-dasharray': [2, 2] } });
     S.map.addSource('br', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'br', type: 'circle', source: 'br', paint: { 'circle-radius': 4, 'circle-color': ['get', 'color'], 'circle-opacity': 0.75, 'circle-stroke-color': '#333', 'circle-stroke-width': 0.6 } });
     S.map.addSource('pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    S.map.addLayer({ id: 'pin', type: 'circle', source: 'pin', paint: { 'circle-radius': 7, 'circle-color': '#fff', 'circle-stroke-color': '#111', 'circle-stroke-width': 3 } });
+    S.map.addLayer({ id: 'pin', type: 'circle', source: 'pin', paint: { 'circle-radius': 7, 'circle-color': '#FFFAF0', 'circle-stroke-color': '#34454C', 'circle-stroke-width': 3 } });
     S.map.on('mouseenter', 'br', () => S.map.getCanvas().style.cursor = 'pointer'); S.map.on('mouseleave', 'br', () => S.map.getCanvas().style.cursor = '');
     S.map.on('click', 'br', e => { const p = e.features[0].properties; showPopup(e.lngLat, branchPopup(p.bid)); });
     S.map.on('click', async e => {
