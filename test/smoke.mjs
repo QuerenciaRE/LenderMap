@@ -1,4 +1,4 @@
-// Smoke test: serve ./site, search an address, check table/map/drawer, save screenshots. Usage: node smoke.mjs "address"
+// Smoke test: serve ./site, search an address, check both lender lists, map and drawer, save screenshots. Usage: node smoke.mjs "address"
 // Prereq: cd test && npm i playwright && npx playwright install chromium ; site/data must exist (run the pipeline first).
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
@@ -18,8 +18,12 @@ try {
   await page.waitForFunction(() => /lenders|not found|Failed|ZIP/.test(document.querySelector('#summary').textContent + document.querySelector('#addr-result').textContent), null, { timeout: 90000 }).catch(() => {});
   await page.waitForTimeout(3000);
   console.log('SUMMARY:', await page.textContent('#summary')); console.log('ADDR:', await page.textContent('#addr-result'));
-  const rows = await page.$$eval('#tbl tbody tr', trs => trs.slice(0, 5).map(tr => Array.from(tr.children).slice(0, 10).map(td => td.textContent.trim()).join(' | ')));
-  console.log(rows.join('\n')); await page.screenshot({ path: path.join(here, 'shot-table.png') });
-  const first = await page.$('#tbl td.name'); if (first) { await first.click(); await page.waitForTimeout(2500); console.log('DRAWER:', (await page.textContent('#drawer-content')).slice(0, 200).replace(/\s+/g, ' ')); await page.screenshot({ path: path.join(here, 'shot-drawer.png') }); }
+  for (const id of ['hq', 'br']) {
+    console.log((await page.textContent('#lt-' + id)) + ': ' + (await page.textContent('#ls-' + id)));
+    const rows = await page.$$eval(`#cards-${id} .lcard`, cs => cs.slice(0, 5).map(c => c.querySelector('.lc-name').textContent + ' | ' + Array.from(c.querySelectorAll('.lc-stats > div')).map(d => d.textContent.trim()).join(' | ')));
+    console.log(rows.join('\n'));
+  }
+  await page.screenshot({ path: path.join(here, 'shot-results.png') });
+  const first = await page.$('.lcard'); if (first) { await first.click(); await page.waitForTimeout(2500); console.log('DRAWER:', (await page.textContent('#drawer-content')).slice(0, 200).replace(/\s+/g, ' ')); await page.screenshot({ path: path.join(here, 'shot-drawer.png') }); }
   console.log('ERRORS:', errs.filter(e => !e.includes('ERR_ABORTED')).join('\n') || 'none');
 } finally { await browser.close(); server.kill(); }

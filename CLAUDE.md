@@ -13,8 +13,12 @@ the scorecard, and the roadmap.
   `build_metrics.py` (harmonized quarterly metrics) -> `build_lenders.py` (directory + branches) -> Census geocoding
   of credit-union addresses -> `model_panel.py` (macro.json) -> `package_site.py` (JSON for the site).
 - `site/` the website: `index.html`, `app.css`, `app.js` (vanilla JS + MapLibre GL from cdnjs; no build step).
-  `site/data/` is generated, never committed. Layout follows Airbnb-style patterns (see `PLAN.md`): landing page with a
-  segmented search pill, results with chips + Filters modal, cards/table toggle, resizable list/map split.
+  `site/data/` is generated, never committed. Landing page asks only for the property address. Results page: two lists
+  (1: lenders headquartered in the property's county; 2: lenders headquartered elsewhere in the state with a branch in
+  the county or within N miles), each ordered by score, with the map on the right. Cards show only the headline
+  metrics: loan/deposit, CRE lending capacity, tier 1 leverage (bank) / net worth ratio (CU), funding cost, and for
+  CUs CRE granted YTD + CRE rate. Loan use, amount, lender types, membership and weights live in the Filters modal.
+  County matching: `cty` (lender HQ county) and branch index 10 come from `package_site.py`; `app.js::CTY` normalizes names.
 - `site/featured.json` (hand-edited, committed): paid placements for the landing rows and the one "Sponsored" slot above
   results. `id` is the site id (`B` + FDIC cert, `C` + NCUA charter). Entries with `"placeholder": true` show only on
   `?preview=1` or a local copy. Placements must never change score, tier or ranked order; paid ones always say "Sponsored".
