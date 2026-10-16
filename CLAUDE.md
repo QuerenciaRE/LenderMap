@@ -9,8 +9,9 @@ the scorecard, and the roadmap.
 
 ## Layout
 
-- `scripts/` Python data pipeline. `run_all.sh` runs everything in order: FDIC + NCUA + FRED downloads -> parse ->
-  `build_metrics.py` (harmonized quarterly metrics) -> `build_lenders.py` (directory + branches) -> Census geocoding
+- `scripts/` Python data pipeline. `run_all.sh` runs everything in order: FDIC + NCUA + FRED + HMDA downloads -> parse ->
+  `build_metrics.py` (harmonized quarterly metrics) -> `build_lenders.py` (directory + branches) -> `build_hmda.py`
+  (HMDA lender match + tract placement; optional, failures leave the site without HMDA) -> Census geocoding
   of credit-union addresses -> `model_panel.py` (macro.json) -> `package_site.py` (JSON for the site).
 - `site/` the website: `index.html`, `app.css`, `app.js` (vanilla JS + MapLibre GL from cdnjs; no build step).
   `site/data/` is generated, never committed. Layout follows Airbnb-style patterns (see `PLAN.md`): landing page with a
@@ -51,6 +52,10 @@ the scorecard, and the roadmap.
 - Credit-union HQ coordinates come from Census batch geocoding (free) with ZIP-centroid fallback; FDIC supplies bank
   coordinates. Address lookup in the browser uses Photon (OpenStreetMap), Nominatim fallback, then ZIP centroid.
 - Mergers: history is as reported per charter; no restatement.
+- HMDA (`dl_hmda.py`, `build_hmda.py`): 5+ unit apartment originations 2018-latest from the CFPB Data Browser API, annual,
+  published each June. Matched LEI -> RSSD (HMDA Institutions API) -> FDIC `FED_RSSD` / NCUA FOICU `RSSD`, name+state
+  fallback. No addresses in public HMDA: loans sit at census-tract centers. Informational only: never feeds the score.
+  Site: `hm` per lender in lenders.json, `hmda/{ST}.json` (latest 3 years) for "apartment loans within 10 mi".
 
 ## Scorecard (client-side, `app.js::scoreOf`)
 

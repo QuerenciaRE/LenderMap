@@ -34,6 +34,7 @@ Decisions from the Q&A:
 | FDIC BankFind Suite API `api.fdic.gov/banks/{financials,institutions,locations,sod}` | Quarterly Call Report financials 2016Q1->latest (80 fields), institution directory with coordinates, branch locations, Summary of Deposits (branch deposits each June 30) | 10,000 rows per request; we query per quarter / per year |
 | NCUA quarterly zips `ncua.gov/files/publications/analysis/call-report-data-YYYY-MM.zip` | Form 5300 call reports (FS220*.txt), FOICU directory, Credit Union Branch Information | Form changed 2017Q2; account mapping in `build_metrics.py` |
 | FRED CSV (no key) | DFF, SOFR, DGS2/5/10, UNRATE, DRTSCLCC (SLOOS CRE tightening), SUBLPDRCSC, COMREPUSQ159N, BAMLC0A4CBBB | BBB OAS only ~3 years without a key; tolerated as missing |
+| CFPB/FFIEC HMDA Data Browser + Institutions API (added 2026-10) | 5+ unit apartment loan originations 2018-latest (lender LEI, census tract, amount); LEI -> RSSD lookup | Annual, released each June; the public Reporter Panel ended after 2023, hence the per-LEI lookup. Census tract gazetteers place loans |
 | Census geocoder (batch, free) + ZCTA gazetteer | CU branch/HQ coordinates; ZIP centroids | 74% exact, 10% non-exact, 13% ZIP centroid, 3% unresolved (foreign/military) |
 | Photon (komoot) / Nominatim | In-browser address lookup | Both allow cross-origin requests; Census geocoder does not |
 | OpenFreeMap `tiles.openfreemap.org/styles/positron` | Basemap tiles | Free, no key |
@@ -65,7 +66,9 @@ Product claim is "likely vs unlikely CRE lenders near this address", shown as ti
 ## 4. Known gaps / ideas
 
 - Bank CRE-specific interest income (Schedule RI items) is not in the FDIC API; the FFIEC CDR bulk files would allow a
-  bank CRE yield proxy. HMDA multifamily originations could add true bank originations for multifamily only.
+  bank CRE yield proxy. HMDA apartment originations were added 2026-10 (informational; not yet tested as a score input).
+- Fannie Mae / Freddie Mac multifamily loan files: set aside (Fannie needs a login and forbids redistribution; neither names
+  the bank lender). Matt: banks and credit unions are the focus.
 - Branch-level deposit cost does not exist publicly; "expensive deposits" is institution-level only.
 - CU field-of-membership for state charters (TOM code 99) is not classified by NCUA; treated as eligible by default.
 - `site/data/lenders.json` is 4 MB (1.2 MB gzipped); branches are per-state files loaded by bounding box; per-lender

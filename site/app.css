@@ -247,6 +247,7 @@ dl.defs dt { font-weight: 500; margin-top: 12px; } dl.defs dd { margin: 2px 0 0 
 .lc-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px 16px; margin: 0; }
 .lc-stats dt, .pp-stats dt { font-size: 11px; color: var(--muted); font-weight: 500; }
 .lc-stats dd, .pp-stats dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+.lc-hm { margin-top: 10px; display: inline-block; padding: 3px 10px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: 12.5px; font-weight: 500; }
 .lcards .empty { padding: 24px; border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--muted); text-align: center; }
 
 /* map markers: text pill with the tier letter */

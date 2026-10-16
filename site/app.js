@@ -13,6 +13,7 @@ const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, c => ({ '&': '&
 const hav = (a, b, c, d) => { const R = 3958.8, p = Math.PI / 180, dLat = (c - a) * p, dLon = (d - b) * p; const h = Math.sin(dLat / 2) ** 2 + Math.cos(a * p) * Math.cos(c * p) * Math.sin(dLon / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
 
 /* ---------------- columns ---------------- */
+const HM_R = 10;   // miles: radius for "apartment loans near this property" (HMDA tract centroids)
 const COLS = [
   { k: 'tier', l: 'Tier', f: r => `<span class="tier t${r.tier}">${r.tier}</span>`, t: 'National quintile of the likeliness-to-lend score (A = top 20%)' },
   { k: 'score', l: 'Score', f: r => r.score.toFixed(0), t: 'Weighted percentile scorecard (0-100) × cap penalty' },
@@ -47,11 +48,14 @@ const COLS = [
   { k: 'roa', l: 'ROA', f: r => fmtP(r.roa), t: 'Annualized net income / average assets' },
   { k: 'limit', l: 'Lending limit $M', f: r => fmtM(r.limit, 1), t: 'Estimate: 15% of capital base (national banks 15% of capital & surplus; CUs 15% of net worth to one borrower)' },
   { k: 'nb', l: 'Branches', f: r => fmtI(r.nb), t: 'Total offices' },
+  { k: 'hmn', l: 'Apt loans near', hmda: true, f: r => r.hmn ? `${r.hmn} <span class="dim">($${fmtM(r.hma, 1)}M)</span>` : '0', t: `Apartment (5+ unit) loans this lender made within ${HM_R} mi of the address in the latest 3 years of HMDA data (count and $M). Banks and credit unions below HMDA reporting thresholds file nothing` },
 ];
 
 /* ---------------- load ---------------- */
 async function load() {
   const [meta, lj, bi, macro] = await Promise.all(['meta.json', 'lenders.json', 'branch_index.json', 'macro.json'].map(f => fetch(CFG.data + f).then(r => r.json())));
+  const hi = await fetch(CFG.data + 'hmda_index.json').then(r => r.ok ? r.json() : null).catch(() => null);   // optional: absent when the HMDA step failed
+  S.hmIdx = hi; S.hmLoaded = {}; S.hmRows = [];
   const lenders = lj.rows.map(r => Object.fromEntries(lj.cols.map((k, i) => [k, r[i]])));
   S.meta = meta; S.lenders = lenders; S.years = bi.years; S.brBox = bi.states; S.brLoaded = {}; S.branches = []; S.brById = {};
   lenders.forEach(l => S.byId[l.id] = l);
@@ -132,6 +136,12 @@ async function ensureBranches(states) {
   const files = await Promise.all(need.map(s => fetch(`${CFG.data}branches/${s}.json`).then(r => r.json()).catch(() => [])));
   need.forEach((s, i) => { S.brLoaded[s] = true; for (const b of files[i]) { S.branches.push(b); S.brById[b[0]] = b; (S.brByLender[b[1]] = S.brByLender[b[1]] || []).push(b); } });
 }
+async function ensureHmda(states) {
+  if (!S.hmIdx) return;
+  const need = states.filter(s => S.hmIdx.states[s] && !S.hmLoaded[s]);
+  const files = await Promise.all(need.map(s => fetch(`${CFG.data}hmda/${s}.json`).then(r => r.json()).catch(() => [])));
+  need.forEach((s, i) => { S.hmLoaded[s] = true; for (const x of files[i]) S.hmRows.push(x); });
+}
 function statesNear(lat, lon, mi) {
   const dLat = mi / 68.7, dLon = mi / (69.17 * Math.cos(lat * Math.PI / 180)), a = lat - dLat, b = lon - dLon, c = lat + dLat, d = lon + dLon;
   return Object.entries(S.brBox).filter(([s, bb]) => !(bb[2] < a || bb[0] > c || bb[3] < b || bb[1] > d)).map(([s]) => s);
@@ -152,12 +162,16 @@ async function run() {
   if (!S.pt) return;
   const mode = document.querySelector('input[name=mode]:checked').value, rHq = +$('r-hq').value || 10, rHq2 = $('r-hq2').value === '' ? null : +$('r-hq2').value, rBr = +$('r-br').value || 5;
   await ensureBranches(statesNear(S.pt.lat, S.pt.lon, mode === 'hq' ? Math.max(rBr, rHq) : rBr));
+  await ensureHmda(statesNear(S.pt.lat, S.pt.lon, HM_R)).catch(() => null);
   const occ = $('occ').value, amt = parseFloat(($('amt').value || '').replace(/[^0-9.]/g, '')) || null, amtM = amt ? (amt > 1e5 ? amt / 1e6 : amt) : null; // accept dollars or $M
   const fBank = $('f-bank').checked, fThrift = $('f-thrift').checked, fCu = $('f-cu').checked, fFom = $('f-fom').checked, fAny = $('f-anycre').checked;
   const { lat, lon } = S.pt;
   // branch proximity for every lender (one pass over all branches)
   const near = {}, brR = mode === 'hq' ? Math.max(rBr, rHq) : rBr;
   for (const b of S.branches) { const d = hav(lat, lon, b[2], b[3]); if (d <= brR) { const n = near[b[1]] || (near[b[1]] = { n: 0, min: 1e9 }); n.n++; if (d < n.min) n.min = d; } }
+  // HMDA apartment loans within HM_R miles (rows: [lender, lat, lon, year, loans, $K])
+  const hmNear = {};
+  for (const x of S.hmRows) if (Math.abs(x[1] - lat) < 0.3 && hav(lat, lon, x[1], x[2]) <= HM_R) { const h = hmNear[x[0]] || (hmNear[x[0]] = { n: 0, k: 0 }); h.n += x[4]; h.k += x[5]; }
   const out = [];
   for (const l of S.lenders) {
     if (l.lat == null) continue;
@@ -171,7 +185,8 @@ async function run() {
     if (mode === 'hq') ok = d <= rHq;
     else ok = ((S.st && l.st === S.st) || (rHq2 != null && d <= rHq2)) && nb && nb.min <= rBr;
     if (!ok) continue;
-    out.push(Object.assign({}, l, { dist: d, nbr: nb ? nb.n : 0, brdist: nb ? nb.min : null }));
+    const hn = hmNear[l.id];
+    out.push(Object.assign({}, l, { dist: d, nbr: nb ? nb.n : 0, brdist: nb ? nb.min : null, hmn: S.hmIdx ? (hn ? hn.n : 0) : null, hma: hn ? +(hn.k / 1000).toFixed(1) : null }));
   }
   S.results = out; S.rBr = brR; S.mode = mode; S.rHq = rHq;
   renderResults();
@@ -181,7 +196,7 @@ async function run() {
 }
 
 /* ---------------- table ---------------- */
-function visibleCols() { const occ = $('occ').value; return COLS.filter(c => !c.occ || c.occ === occ); }
+function visibleCols() { const occ = $('occ').value; return COLS.filter(c => (!c.occ || c.occ === occ) && (!c.hmda || S.hmIdx)); }
 function displayCols() { const c = visibleCols(); return [...c.filter(x => x.k === 'n'), ...c.filter(x => x.k !== 'n')]; }   // lender name leads on screen; CSV keeps COLS order
 function renderTable() {
   const cols = displayCols(), { key, dir } = S.sort;
@@ -211,6 +226,20 @@ function renderResults() {
 
 /* ---------------- cards (ranked by score, same order as the table's default sort) ---------------- */
 const ranked = () => S.results.slice().sort((a, b) => b.score - a.score);
+const hmSpan = () => { const y = S.hmIdx ? S.hmIdx.years : []; return y.length ? (y.length > 1 ? `${y[0]}-${y[y.length - 1]}` : `${y[0]}`) : ''; };
+function hmdaSection(l) {
+  if (!S.hmIdx) return '';
+  const all = S.hmIdx.all_years, rows = l.hm || [], by = Object.fromEntries(rows.map(x => [x[0], x]));
+  let h = `<h3>Apartment loans made (HMDA, 5+ units)</h3>`;
+  if (S.pt && S.results.length) { const r = S.results.find(x => x.id === l.id); if (r) h += `<div class="meta">${r.hmn ? `<b>${r.hmn}</b> loan${r.hmn === 1 ? '' : 's'} ($${fmtM(r.hma, 1)}M) within ${HM_R} mi of this property, ${hmSpan()}.` : `None within ${HM_R} mi of this property, ${hmSpan()}.`}</div>`; }
+  if (!rows.length) return h + `<div class="hint">No 5+ unit apartment loans reported to HMDA ${all[0]}-${all[all.length - 1]}. Lenders below HMDA's reporting thresholds (small or rural institutions, or fewer than 25 home loans a year) file nothing, so this does not prove the lender avoids apartments.</div>`;
+  h += `<div class="histwrap"><table class="hist"><thead><tr><th>Year</th>${all.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>` +
+    `<tr><td>Loans (#)</td>${all.map(y => `<td>${by[y] ? fmtI(by[y][1]) : '<span class="na">–</span>'}</td>`).join('')}</tr>` +
+    `<tr><td>Amount ($M)</td>${all.map(y => `<td>${by[y] ? fmtM(by[y][2], 1) : '<span class="na">–</span>'}</td>`).join('')}</tr>` +
+    `<tr><td>Avg loan ($M)</td>${all.map(y => `<td>${by[y] ? fmtM(by[y][2] / by[y][1], 2) : '<span class="na">–</span>'}</td>`).join('')}</tr>` +
+    '</tbody></table></div><div class="hint">Originations of loans on 5+ unit residential buildings reported under HMDA (calendar years; published each spring). A dash means none reported that year. Other commercial property types are not covered by HMDA.</div>';
+  return h;
+}
 function typeText(r) { return (r.c === 'B' ? 'Bank' : 'Credit union') + (r.cl === 'Savings institution' ? ', thrift' : '') + (r.c === 'C' && r.licu ? ', low-income designated' : ''); }
 function renderCards() {
   const occ = $('occ').value;
@@ -220,12 +249,13 @@ function renderCards() {
       occ === 'inv' ? ['Inv. CRE / capital', fmtP(r.crecap, 0)] : ['OO CRE / capital', fmtP(r.oocap, 0)],
       ['CRE growth 4Q', fmtP(r.momv, 2)], ['Lending limit', '$' + fmtM(r.limit, 1) + 'M']];
     const near = r.nbr ? `${r.nbr} branch${r.nbr === 1 ? '' : 'es'} near (closest ${r.brdist.toFixed(1)} mi)` : 'No branch within the radius';
+    const hm = r.hmn ? `<div class="lc-hm">${r.hmn} apartment loan${r.hmn === 1 ? '' : 's'} within ${HM_R} mi, ${hmSpan()} ($${fmtM(r.hma, 1)}M)</div>` : '';
     return `<li class="lcard" data-id="${r.id}" tabindex="0" aria-label="${i + 1}. ${esc(r.n)}, tier ${r.tier}, score ${r.score.toFixed(0)}. Open details">
       <div class="lc-tier t${r.tier}"><span class="lc-letter">${r.tier}</span><span class="lc-sub">Tier</span></div>
       <div class="lc-main">
         <div class="lc-top"><span class="lc-rank">${i + 1}</span><span class="lc-name">${esc(r.n)}</span></div>
         <div class="lc-meta">${typeText(r)} · HQ ${esc(r.ci)}, ${r.st}, ${r.dist.toFixed(1)} mi · ${near}</div>
-        <dl class="lc-stats">${stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+        <dl class="lc-stats">${stats.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>${hm}
       </div></li>`;
   }).join('') || '<li class="empty">No lenders match. Try "In state + branch nearby" in Filters, a larger radius, or more lender types.</li>';
 }
@@ -370,6 +400,7 @@ window.openLender = async function (id) {
     <div class="card"><div class="k">Investment CRE</div><div class="v">$${fmtM(l.inv, 0)}M</div></div>
     <div class="card"><div class="k">Est. lending limit</div><div class="v">$${fmtM(l.limit, 1)}M</div></div>
   </div>`;
+  html += hmdaSection(l);
   if (h) {
     const qs = h.q, same = qs[qs.length - 1].slice(2), annual = qs.map((q, i) => i).filter(i => qs[i].slice(2) === same);
     const build = idx => `<div class="histwrap"><table class="hist"><thead><tr><th>Metric</th>${idx.map(i => `<th>${qs[i]}</th>`).join('')}</tr></thead><tbody>` +
@@ -408,13 +439,14 @@ const DEFS = [
   ['Non-performing loans', 'Banks: loans 90+ days past due plus nonaccrual, / gross loans. Credit unions: loans 60+ days delinquent / loans. Shown as reported; definitions differ.'],
   ['Lending limit', 'Estimate = 15% of the capital base. National banks: 15% of capital and surplus unsecured (state limits range roughly 15-25%). Credit unions: 15% of net worth to one borrower. Used only to drop lenders that could not hold the requested amount alone.'],
   ['Branches', 'Bank branch deposits: FDIC Summary of Deposits as of June 30 each year. Quartile = rank within the owning bank\'s non-main-office branches by deposits. Main offices are excluded because they often carry internet, brokered and corporate deposits. Credit-union branches are shown from the NCUA branch file without deposits; addresses were geocoded (Census), with ZIP-centroid fallback.'],
+  ['Apartment loans (HMDA)', `Home Mortgage Disclosure Act loan records: every 5+ unit apartment loan originated by a reporting lender, matched to banks and credit unions by their federal ID (RSSD), with a name-and-state match as fallback. HMDA gives the census tract, not the address; each loan is placed at its tract's center, so "within ${HM_R} mi" is approximate. Loan amounts are rounded by HMDA to the nearest $10,000. Calendar-year data, published each spring. The same rules apply to banks and credit unions, but institutions below the reporting thresholds (small, rural, or fewer than 25 closed-end home loans in each of the two prior years) file nothing. This is the only public source of actual loans made by banks; it covers apartments only and does not change the score.`],
   ['Mergers', 'History is as reported under each charter. An acquired institution keeps its own pre-merger history; the acquirer shows its own.'],
   ['Credit-union field of membership', 'Default results include community-charter credit unions and state charters (whose field of membership NCUA does not classify). Single- and multiple-common-bond credit unions can lend only to members and are hidden unless the box is checked.'],
 ];
 function showModal(html) { $('modal-content').innerHTML = html; openDialog('modal'); }
 $('btn-defs').onclick = e => { e.preventDefault(); showModal('<h2>Definitions</h2><dl class="defs">' + DEFS.map(d => `<dt>${d[0]}</dt><dd>${d[1]}</dd>`).join('') + '</dl>'); };
 $('btn-about').onclick = e => { e.preventDefault(); showModal(`<h2>About</h2><p>Free tool for commercial real estate borrowers to find the depository lenders most likely to lend on a property, using only public regulatory filings. Nothing here is a recommendation, an offer of credit, or a statement by any lender.</p>
-<dl class="defs"><dt>Sources</dt><dd>FDIC BankFind Suite API (institutions, locations, quarterly financials from Call Reports, Summary of Deposits); NCUA 5300 Call Report quarterly data and Credit Union Branch Information files; FRED (fed funds, SOFR, Treasury yields, Senior Loan Officer Survey); U.S. Census Bureau geocoder; OpenStreetMap / Photon for address lookup; OpenFreeMap tiles.</dd>
+<dl class="defs"><dt>Sources</dt><dd>FDIC BankFind Suite API (institutions, locations, quarterly financials from Call Reports, Summary of Deposits); NCUA 5300 Call Report quarterly data and Credit Union Branch Information files; FRED (fed funds, SOFR, Treasury yields, Senior Loan Officer Survey); CFPB/FFIEC HMDA Data Browser (apartment loan originations) and Census tract centers; U.S. Census Bureau geocoder; OpenStreetMap / Photon for address lookup; OpenFreeMap tiles.</dd>
 <dt>Refresh</dt><dd>Bank and credit-union call reports are published roughly 60 days after each quarter end; branch deposits once a year (June 30 data, published late September). The site rebuilds automatically when new data appears.</dd>
 <dt>Method notes</dt><dd>A panel of ${(430927).toLocaleString()} lender-quarters (2016-2026) was used to test which current metrics predict the next four quarters of CRE growth. The strongest, in order: trailing CRE growth, CRE share of loans, CRE and construction as % of capital, size, deposit growth; non-performing loans reduce it. Capital headroom only matters at the extremes. Those findings set the default weights and penalties; weights are adjustable.</dd></dl>`); };
 /* dialogs (drawer, Definitions/About modal, Filters): focus moves in, Tab stays inside, Esc or Close returns focus */

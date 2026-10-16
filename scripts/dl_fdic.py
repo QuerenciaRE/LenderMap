@@ -43,7 +43,7 @@ if __name__ == "__main__":
         assert len(rows) == total, (d, len(rows), total)
         json.dump(rows, open(fn, "w")); print("fin", d, len(rows), flush=True)
     # 2. institutions (all, active and inactive) 
-    INST = "CERT NAME ADDRESS CITY STALP ZIP LATITUDE LONGITUDE OFFICES ACTIVE BKCLASS CB ASSET DEP RSSDHCR NAMEHCR SPECGRP SPECGRPN REGAGNT WEBADDR ESTYMD ENDEFYMD PROCDATE STNAME COUNTY CBSA MUTUAL SUBCHAPS NEWCERT FEDCHRTR STCHRTR".split()
+    INST = "CERT FED_RSSD NAME ADDRESS CITY STALP ZIP LATITUDE LONGITUDE OFFICES ACTIVE BKCLASS CB ASSET DEP RSSDHCR NAMEHCR SPECGRP SPECGRPN REGAGNT WEBADDR ESTYMD ENDEFYMD PROCDATE STNAME COUNTY CBSA MUTUAL SUBCHAPS NEWCERT FEDCHRTR STCHRTR".split()
     fn = f"{RAW}/institutions.json"
     if True:
         rows, total = fetch_all("institutions", "ACTIVE:1", INST)

@@ -122,6 +122,28 @@ for st_, rows_ in bystate.items():
 json.dump({'years': [int(y[4:]) for y in yrs], 'states': bbox}, open(f'{SITE}/branch_index.json', 'w'), separators=(',', ':'))
 lst = keep.groupby('lender_id')['state'].agg(lambda s: sorted(set(x if x in STATES_OK else 'XX' for x in s)))
 for o in out: o['bst'] = lst.get(o['id'], [])
+
+# ---- HMDA multifamily (5+ unit) originations: per-lender annual totals in lenders.json ('hm' = [[year, loans, $M], ...]),
+# and loan locations (tract centroids) for the latest 3 years in per-state files, for "apartment loans near this property"
+hmeta = None
+if os.path.exists(f'{D}/hmda_loans.parquet'):
+    hl = pd.read_parquet(f'{D}/hmda_loans.parquet'); hl = hl[hl['lender_id'].isin(set(lat['lender_id']))]
+    tot = hl.groupby(['lender_id', 'year']).agg(n=('n', 'sum'), amt=('amt', 'sum')).reset_index()
+    hm = {lid: [[int(y), int(n), round(a / 1e6, 1)] for y, n, a in zip(g_['year'], g_['n'], g_['amt'])] for lid, g_ in tot.groupby('lender_id')}
+    for o in out: o['hm'] = hm.get(o['id'])
+    hyears = sorted(hl['year'].unique().tolist())[-3:]
+    near = hl[hl['year'].isin(hyears) & hl['lat'].notna()]
+    os.makedirs(f'{SITE}/hmda', exist_ok=True); hbox = {}
+    for st_, g_ in near.groupby(near['st'].where(near['st'].isin(STATES_OK), 'XX')):
+        rows_ = [[a, round(float(b), 4), round(float(c), 4), int(d), int(e), int(round(f / 1e3))] for a, b, c, d, e, f in zip(g_['lender_id'], g_['lat'], g_['lon'], g_['year'], g_['n'], g_['amt'].fillna(0))]
+        json.dump(rows_, open(f'{SITE}/hmda/{st_}.json', 'w'), separators=(',', ':'))
+        hbox[st_] = [round(float(g_['lat'].min()), 3), round(float(g_['lon'].min()), 3), round(float(g_['lat'].max()), 3), round(float(g_['lon'].max()), 3), len(rows_)]
+    hmeta = {'years': [int(y) for y in hyears], 'all_years': [int(y) for y in sorted(hl['year'].unique())], 'states': hbox}
+    json.dump(hmeta, open(f'{SITE}/hmda_index.json', 'w'), separators=(',', ':'))
+    print('HMDA: lenders with multifamily loans', len(hm), '; near-files', len(hbox), '; years', hmeta['all_years'])
+else:
+    for o in out: o['hm'] = None
+    print('HMDA: no data (skipped)')
 cols_l = list(out[0].keys())
 json.dump({'cols': cols_l, 'rows': [[o[k] for k in cols_l] for o in out]}, open(f'{SITE}/lenders.json', 'w'), separators=(',', ':'))
 print('branch files', len(bystate), 'rows', len(arr), 'largest KB', max(os.path.getsize(f'{SITE}/branches/{x}.json') for x in bystate) // 1024, '; lenders.json KB', os.path.getsize(f'{SITE}/lenders.json') // 1024)
@@ -153,7 +175,7 @@ print('history files', len(os.listdir(f'{SITE}/history')), '; state files', len(
 # ---- macro context for the UI header
 mac = pd.read_parquet(f'{D}/model_panel.parquet', columns=['period', 'fedfunds', 'sofr', 'dgs5', 'dgs10', 'sloos_cre_tight']).drop_duplicates('period').sort_values('period')
 json.dump({'q': [f"{p.year % 100}Q{p.quarter}" for p in mac['period']], **{c: [r(v, 2) for v in mac[c]] for c in ['fedfunds', 'sofr', 'dgs5', 'dgs10', 'sloos_cre_tight']}}, open(f'{SITE}/macro.json', 'w'))
-json.dump({'latest': f"{latest.year % 100}Q{lq}", 'latest_date': str(latest.date()), 'n_banks': int((lat['charter'] == 'bank').sum()), 'n_cus': int((lat['charter'] == 'cu').sum()), 'n_branches': len(arr), 'sod_year': int(yrs[-1][4:]), 'built': pd.Timestamp.today().strftime('%Y-%m-%d')}, open(f'{SITE}/meta.json', 'w'))
+json.dump({'latest': f"{latest.year % 100}Q{lq}", 'latest_date': str(latest.date()), 'n_banks': int((lat['charter'] == 'bank').sum()), 'n_cus': int((lat['charter'] == 'cu').sum()), 'n_branches': len(arr), 'sod_year': int(yrs[-1][4:]), 'built': pd.Timestamp.today().strftime('%Y-%m-%d'), 'hmda_years': hmeta['all_years'] if hmeta else []}, open(f'{SITE}/meta.json', 'w'))
 print(open(f'{SITE}/meta.json').read())
 
 # ---- offline helpers: ZIP centroids (fallback geocoder) and simplified state outlines (schematic basemap)

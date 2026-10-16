@@ -33,6 +33,7 @@ jobs:
             raw/ncua
             raw/fdic
             raw/geo
+            raw/hmda
           key: raw-${{ github.run_id }}
           restore-keys: raw-
       - run: pip install -r requirements.txt
