@@ -55,7 +55,7 @@ label.sel { display: flex; align-items: center; gap: 8px; }
 /* header */
 header#top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 20px; min-height: var(--hdr); padding: 10px 32px; background: var(--bg); border-bottom: 1px solid var(--line); }
 body.landing header#top { border-bottom-color: transparent; }
-.brand { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 17px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.brand { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; font-size: 17px; color: var(--slate); text-decoration: none; white-space: nowrap; }
 #hdr-search { flex: 1; display: flex; justify-content: center; min-width: 0; }
 header nav { display: flex; gap: 16px; }
 header nav button.link { font-size: 13.5px; }
