@@ -1,6 +1,6 @@
 :root {
   --font-sans: "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Jost", "Inter Tight", system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   /* brand palette */
   --raw-sienna: #BB7125;  /* CTAs, accents */
