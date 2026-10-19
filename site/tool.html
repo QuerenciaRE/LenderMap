@@ -60,7 +60,7 @@
 
     <section class="stat-row" aria-label="Summary">
       <div class="stat"><span class="stat-label">Lenders saved</span><span class="stat-value">8</span><span class="small">5 banks, 3 credit unions</span></div>
-      <div class="stat"><span class="stat-label">Tier A or B</span><span class="stat-value">5</span><span class="small">National top 40%</span></div>
+      <div class="stat"><span class="stat-label">Grade A or better</span><span class="stat-value">5</span><span class="small">National top half</span></div>
       <div class="stat"><span class="stat-label">Median loan to deposit</span><span class="stat-value">86.4%</span><span class="small">Across the list</span></div>
       <div class="stat"><span class="stat-label">CRE lending capacity</span><span class="stat-value">$412.6M</span><span class="small">Sum of room under limits</span></div>
     </section>
@@ -75,7 +75,7 @@
         <div class="field fb-search"><label class="field-label vh" for="wl-q">Filter by name</label><span class="input-wrap lead"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg><input class="input" id="wl-q" type="text" placeholder="Filter by name"></span></div>
         <div class="field"><label class="field-label vh" for="wl-st">Status</label><span class="input-wrap trail"><select class="input" id="wl-st"><option value="">Any status</option><option>Not contacted</option><option>Called</option><option>Term sheet</option><option>Passed</option></select><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-chevron-down"/></svg></span></div>
         <div class="chip-row" aria-label="Quick filters" role="group">
-          <button type="button" class="chip" aria-pressed="false" data-chip="ab">Tier A or B<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+          <button type="button" class="chip" aria-pressed="false" data-chip="ab">Grade A or B<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
           <button type="button" class="chip" aria-pressed="false" data-chip="cap">Has capacity<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
         </div>
       </div>
@@ -83,7 +83,7 @@
       <div class="table-wrap" tabindex="0" role="region" aria-label="Watchlist table">
         <table class="table actions" id="wl">
           <caption class="vh">Watchlist, sample data</caption>
-          <thead><tr><th scope="col" class="c"><input type="checkbox" class="checkbox" id="sel-all" aria-label="Select all rows"></th><th scope="col">Lender</th><th scope="col">Type</th><th scope="col">Tier</th><th scope="col" class="n">Capacity $M</th><th scope="col" class="n">Loan to deposit</th><th scope="col" class="n">CRE growth, 4Q</th><th scope="col">Status</th><th scope="col" class="c"><span class="vh">Edit</span></th></tr></thead>
+          <thead><tr><th scope="col" class="c"><input type="checkbox" class="checkbox" id="sel-all" aria-label="Select all rows"></th><th scope="col">Lender</th><th scope="col">Type</th><th scope="col">Grade</th><th scope="col" class="n">Capacity $M</th><th scope="col" class="n">Loan to deposit</th><th scope="col" class="n">CRE growth, 4Q</th><th scope="col">Status</th><th scope="col" class="c"><span class="vh">Edit</span></th></tr></thead>
           <tbody id="wl-rows"></tbody>
         </table>
       </div>
@@ -117,20 +117,20 @@
 'use strict';
 // sample rows for the design reference (not real lenders)
 const ROWS = [
-  ['Courthouse Square Bank', 'B', 'A', 48.2, 88.4, 2.4, 'Called'],
+  ['Courthouse Square Bank', 'B', 'A+', 48.2, 88.4, 2.4, 'Called'],
   ['Prairie Line Credit Union', 'C', 'A', 61.5, 79.2, 1.9, 'Not contacted'],
   ['Millrace Savings', 'B', 'B', 12.7, 91.0, 0.8, 'Term sheet'],
   ['Granary District Bank', 'B', 'B', 104.3, 84.1, 0.3, 'Not contacted'],
   ['Teachers Community CU', 'C', 'B', 33.9, 71.6, 1.2, 'Called'],
   ['Ridgeway State Bank', 'B', 'C', -14.6, 97.1, -0.6, 'Not contacted'],
-  ['Riverbend Federal CU', 'C', 'D', 9.8, 66.3, -0.2, 'Passed'],
-  ['Union Depot National Bank', 'B', 'E', -370, 102.5, -1.8, 'Passed'],
+  ['Riverbend Federal CU', 'C', 'C', 9.8, 66.3, -0.2, 'Passed'],
+  ['Union Depot National Bank', 'B', 'D', -370, 102.5, -1.8, 'Passed'],
 ].map(([n, c, tier, cap, ltd, g, st], i) => ({ id: 'r' + i, n, c, tier, cap, ltd, g, st, note: '', email: '', alert: true }));
 const F = { type: 'all', q: '', st: '', ab: false, capOn: false }, sel = new Set();
-function shown() { return ROWS.filter(r => (F.type === 'all' || r.c === F.type) && (!F.q || r.n.toLowerCase().includes(F.q)) && (!F.st || r.st === F.st) && (!F.ab || 'AB'.includes(r.tier)) && (!F.capOn || r.cap > 0)); }
+function shown() { return ROWS.filter(r => (F.type === 'all' || r.c === F.type) && (!F.q || r.n.toLowerCase().includes(F.q)) && (!F.st || r.st === F.st) && (!F.ab || ['A+', 'A', 'B'].includes(r.tier)) && (!F.capOn || r.cap > 0)); }
 function render() {
   const rows = shown();
-  $('wl-rows').innerHTML = rows.map(r => `<tr aria-selected="${sel.has(r.id)}"><td class="c"><input type="checkbox" class="checkbox" data-sel="${r.id}" ${sel.has(r.id) ? 'checked' : ''} aria-label="Select ${esc(r.n)}"></td><td><span class="t-product">${esc(r.n)}</span></td><td>${r.c === 'B' ? 'Bank' : 'Credit union'}</td><td><span class="tier t${r.tier}">${r.tier}</span></td><td class="n">${fmtM(r.cap, 1)}</td><td class="n">${fmtP(r.ltd, 1)}</td><td class="n">${fmtChg(r.g)}</td><td>${esc(r.st)}</td><td class="c"><button type="button" class="icon-button bare" data-edit="${r.id}" aria-label="Edit ${esc(r.n)}">${ICON('pencil')}</button></td></tr>`).join('') || '<tr><td colspan="9" class="na">No lenders match these filters.</td></tr>';
+  $('wl-rows').innerHTML = rows.map(r => `<tr aria-selected="${sel.has(r.id)}"><td class="c"><input type="checkbox" class="checkbox" data-sel="${r.id}" ${sel.has(r.id) ? 'checked' : ''} aria-label="Select ${esc(r.n)}"></td><td><span class="t-product">${esc(r.n)}</span></td><td>${r.c === 'B' ? 'Bank' : 'Credit union'}</td><td><span class="grade g${r.tier === 'A+' ? 'Ap' : r.tier}">${r.tier}</span></td><td class="n">${fmtM(r.cap, 1)}</td><td class="n">${fmtP(r.ltd, 1)}</td><td class="n">${fmtChg(r.g)}</td><td>${esc(r.st)}</td><td class="c"><button type="button" class="icon-button bare" data-edit="${r.id}" aria-label="Edit ${esc(r.n)}">${ICON('pencil')}</button></td></tr>`).join('') || '<tr><td colspan="9" class="na">No lenders match these filters.</td></tr>';
   const vis = rows.filter(r => sel.has(r.id)).length;
   $('sel-all').checked = rows.length > 0 && vis === rows.length; $('sel-all').indeterminate = vis > 0 && vis < rows.length;
   $('bulk').hidden = !sel.size; $('bulk-n').textContent = `${sel.size} selected`;
@@ -146,7 +146,7 @@ let editing = null;
 $('wl-rows').addEventListener('click', e => {
   const b = e.target.closest('[data-edit]'); if (!b) return;
   editing = ROWS.find(r => r.id === b.dataset.edit);
-  $('edit-title').textContent = editing.n; $('edit-meta').textContent = `${editing.c === 'B' ? 'Bank' : 'Credit union'} · Tier ${editing.tier}`;
+  $('edit-title').textContent = editing.n; $('edit-meta').textContent = `${editing.c === 'B' ? 'Bank' : 'Credit union'} · Grade ${editing.tier}`;
   $('ed-status').value = editing.st; $('ed-note').value = editing.note; $('ed-email').value = editing.email; $('ed-alert').setAttribute('aria-checked', String(editing.alert));
   setEmailError(false); openDialog('edit');
 });

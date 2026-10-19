@@ -30,6 +30,7 @@
   --pin-fill: var(--accent-text); /* accent fill was under 4.5:1 for 13px numbers, so pins use accent-text */
   --pin-text: var(--paper);
   --pin-ring: var(--paper);
+  --property-pin: var(--accent);    /* the property's own pin, same terracotta as the logo */
 
   /* Type: Heritage */
   --font-display: "Libre Caslon Condensed", Georgia, serif;

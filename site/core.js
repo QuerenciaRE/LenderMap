@@ -49,30 +49,45 @@ async function loadData() {
   const lenders = lj.rows.map(r => Object.fromEntries(lj.cols.map((k, i) => [k, r[i]])));
   S.meta = meta; S.lenders = lenders; S.years = bi.years; S.brBox = bi.states; S.brLoaded = {}; S.branches = []; S.brById = {};
   lenders.forEach(l => { S.byId[l.id] = l; l.ck = CTY(l.cty); });
-  rescoreAll();
+  rankAll();
 }
+// call reports are labelled "26Q2"; shown as "Q2 2026"
+const quarterLabel = q => { const m = /^(\d\d)Q(\d)$/.exec(q || ''); return m ? `Q${m[2]} 20${m[1]}` : (q || ''); };
 
-/* ---------------- scoring ---------------- */
-const DEFW = { 'w-mom': 25, 'w-fr': 25, 'w-gro': 15, 'w-qual': 15, 'w-cap': 10, 'w-mar': 10 };
-const occNow = () => $('occ') ? $('occ').value : 'inv';
-function weights() { const g = k => $(k) ? +$(k).value : DEFW[k]; return { mom: g('w-mom'), fr: g('w-fr'), gro: g('w-gro'), qual: g('w-qual'), cap: g('w-cap'), mar: g('w-mar') }; }
-function scoreOf(l, occ, w) {
-  const c = l.sc, mom = occ === 'inv' ? c.mom_inv : c.mom_oo, fr = occ === 'inv' ? c.fr_inv : c.fr_oo;
-  const tot = w.mom + w.fr + w.gro + w.qual + w.cap + w.mar;
-  const raw = tot ? (w.mom * mom + w.fr * fr + w.gro * c.gro + w.qual * c.qual + w.cap * c.cap + w.mar * c.mar) / tot : 50;
-  let pen = occ === 'inv' ? l.pen : Math.min(1, l.pen + 0.15);        // OO lending is outside the 300% guidance: soften the penalty
-  if (!(l.cre > 0)) pen *= 0.5; else if (occ === 'inv' ? !(l.inv > 0) : !(l.oo > 0)) pen *= 0.7;   // no CRE of this kind on the books: revealed preference says unlikely
-  return raw * pen;
+/* ---------------- national score: four headline measures, 4 points for the best quarter down to 1 for the worst ---------------- */
+// Ranked against every lender in the data. Capacity and the capital ratio are ranked within each charter (banks against
+// banks, credit unions against credit unions) because the rules differ. A missing figure earns 1 point.
+// Low-income credit unions have no business-loan cap, so their capacity ranks at the top.
+const NO_CAP = 1e12;
+const capOf = l => l.c === 'B' ? l.caprem : (l.licu ? NO_CAP : l.mblrem);
+const capitalOf = l => l.c === 'B' ? l.t1 : l.nwr;
+const capitalName = l => l.c === 'B' ? 'Tier 1 leverage' : 'Net worth ratio';
+const MEASURES = [
+  { k: 'ltd', v: l => l.ltd, dir: -1 },                      // lower loan to deposit = more room to lend
+  { k: 'cap', v: capOf, dir: 1, byCharter: true },
+  { k: 'capital', v: capitalOf, dir: 1, byCharter: true },
+  { k: 'fc', v: l => l.fc, dir: -1 },
+];
+const QUARTER = { 4: 'top quarter', 3: 'second quarter', 2: 'third quarter', 1: 'bottom quarter' };
+// position of each value among the group, best first; tied values share the better position
+function positions(group, v, dir) {
+  const vals = group.map(v).filter(x => x != null && !Number.isNaN(x)).sort((a, b) => (b - a) * dir), first = new Map();
+  vals.forEach((x, i) => { if (!first.has(x)) first.set(x, i); });
+  return x => x == null || Number.isNaN(x) ? null : first.get(x) / vals.length;
 }
-function rescoreAll() {
-  const occ = occNow(), w = weights();
-  S.lenders.forEach(l => l.score = scoreOf(l, occ, w));
-  const sorted = S.lenders.map(l => l.score).sort((a, b) => a - b), n = sorted.length;
-  const cut = p => sorted[Math.floor(p * n)];
-  const c80 = cut(.8), c60 = cut(.6), c40 = cut(.4), c20 = cut(.2);
-  S.lenders.forEach(l => { l.tier = l.score >= c80 ? 'A' : l.score >= c60 ? 'B' : l.score >= c40 ? 'C' : l.score >= c20 ? 'D' : 'E'; l.momv = occ === 'inv' ? l.mominv : l.momoo; l.chgv = occ === 'inv' ? l.invchg : (l.chg != null && l.invchg != null ? +(l.chg - l.invchg).toFixed(1) : null); });
-  document.querySelectorAll('.w').forEach(d => d.querySelector('output').textContent = d.querySelector('input').value);
+function rankAll() {
+  const L = S.lenders, groups = { all: [L], byCharter: [L.filter(l => l.c === 'B'), L.filter(l => l.c === 'C')] };
+  L.forEach(l => { l.pts = {}; l.pct = {}; });
+  for (const m of MEASURES) for (const g of groups[m.byCharter ? 'byCharter' : 'all']) {
+    const pos = positions(g, m.v, m.dir);
+    for (const l of g) { const p = pos(m.v(l)); l.pts[m.k] = p == null ? 1 : p < .25 ? 4 : p < .5 ? 3 : p < .75 ? 2 : 1; l.pct[m.k] = p == null ? 0 : 1 - p; }
+  }
+  L.forEach(l => { l.total = Object.values(l.pts).reduce((a, b) => a + b, 0); l.fine = Object.values(l.pct).reduce((a, b) => a + b, 0); });
+  const pos = positions(L, l => l.total, 1);
+  L.forEach(l => { const p = pos(l.total); l.grade = l.total === 16 ? 'A+' : p < .25 ? 'A' : p < .5 ? 'B' : p < .75 ? 'C' : 'D'; });
 }
+// national order: points, then the finer position within each measure to break ties
+const byScore = (a, b) => b.total - a.total || b.fine - a.fine;
 
 /* ---------------- branch files (per state, loaded on demand) ---------------- */
 async function ensureBranches(states) {
@@ -92,7 +107,7 @@ function branchStats(lid) {
 /* ---------------- shared bits of markup ---------------- */
 function typeText(r) { return (r.c === 'B' ? 'Bank' : 'Credit union') + (r.cl === 'Savings institution' ? ', thrift' : '') + (r.c === 'C' && r.licu ? ', low-income designated' : ''); }
 const typeTag = l => `<span class="tag">${l.c === 'B' ? 'Bank' : 'Credit union'}</span>`;
-const tierTag = (l, long) => `<span class="tier t${l.tier}" title="Tier ${l.tier}: national quintile of the likelihood-to-lend score (A = top 20%)">${long ? 'Tier ' : ''}${l.tier}</span>`;
+const gradeTag = (l, long) => `<span class="grade g${l.grade === 'A+' ? 'Ap' : l.grade}" title="Grade ${l.grade}: ${l.total} of 16 points nationally">${long ? 'Grade ' : ''}${l.grade}</span>`;
 // tabs: role=tab buttons inside role=tablist; arrow keys move between them
 function wireTabs(list, onSelect) {
   const tabs = [...list.querySelectorAll('[role=tab]')];
@@ -128,30 +143,31 @@ async function renderLender(id, box, opts = {}) {
   const h = await getHist(id).catch(() => null);
   await ensureBranches(l.bst || []).catch(() => null);
   if (box.dataset.id !== id) return;   // another lender was opened while this one loaded
-  const occ = occNow(), w = weights(), c = l.sc, mom = occ === 'inv' ? c.mom_inv : c.mom_oo, fr = occ === 'inv' ? c.fr_inv : c.fr_oo;
-  const rawScore = (w.mom * mom + w.fr * fr + w.gro * c.gro + w.qual * c.qual + w.cap * c.cap + w.mar * c.mar) / Math.max(1, w.mom + w.fr + w.gro + w.qual + w.cap + w.mar), pen = l.score / (rawScore || 1);
+  const nB = S.lenders.filter(x => x.c === 'B').length, nC = S.lenders.length - nB, peers = l.c === 'B' ? `${nB.toLocaleString('en-US')} banks` : `${nC.toLocaleString('en-US')} credit unions`;
+  const pts = (k, v) => `${l.pts[k]} point${l.pts[k] === 1 ? '' : 's'} · ${v == null ? 'not reported' : QUARTER[l.pts[k]]}`;
+  const capTxt = l.c === 'C' && l.licu ? 'No cap' : money(capOf(l));
   const web = l.web ? `<a href="${esc(/^https?:/.test(l.web) ? l.web : 'https://' + l.web)}" target="_blank" rel="noopener">Website ${ICON('external')}</a>` : '';
   let html = `<div class="ld-head">
-    <div class="ld-tags">${typeTag(l)}${tierTag(l, true)}</div>
+    <div class="ld-tags">${typeTag(l)}${gradeTag(l, true)}</div>
     <h2 class="ld-name">${esc(nm(l))}</h2>
     <p class="meta">${esc(l.cl)} · HQ ${esc(l.ci)}, ${l.st} ${l.zip || ''}${l.cty ? ` (${esc(countyName(l.cty, l.st))})` : ''}${l.hc ? ` · Holding company: ${esc(l.hc)}` : ''}${l.fom ? ` · Field of membership: ${esc(l.fom)}` : ''}${l.licu ? ' · Low-income designated (business-loan cap exempt)' : ''}${l.cb ? ' · FDIC community bank' : ''} · ${l.nb} offices · Capital base: ${esc(l.captype)} · Data ${esc(l.per)}</p>
     <p class="ld-links">${web}${opts.links || ''}</p>
   </div>
-  <section aria-labelledby="ld-score"><h3 id="ld-score" class="vh">Score</h3><div class="ld-stats">
-    ${stat(`Score, ${occ === 'inv' ? 'investment' : 'owner-occupied'}`, l.score.toFixed(0), 'out of 100')}
-    ${stat('CRE momentum', mom.toFixed(0), 'percentile')}${stat('CRE franchise', fr.toFixed(0), 'percentile')}${stat('Deposit growth', c.gro.toFixed(0), 'percentile')}
-    ${stat('Asset quality', c.qual.toFixed(0), 'percentile')}${stat('Capital', c.cap.toFixed(0), 'percentile')}${stat('Margin', c.mar.toFixed(0), 'percentile')}
-    ${stat('Penalties', pen < 0.995 ? '×' + pen.toFixed(2) : 'None')}
-    ${stat('Assets', money(l.ast, 0))}${stat('Investment CRE', money(l.inv, 0))}${stat('Est. lending limit', money(l.limit, 1))}
-  </div></section>`;
+  <section class="ld-score" aria-labelledby="ld-score"><h3 id="ld-score" class="t-label">National score</h3><div class="ld-stats">
+    <div class="ld-stat ld-total"><span class="stat-label">Score</span><span class="stat-value">${l.total}<span class="of"> / 16</span></span><span class="small">Grade ${l.grade}, against all ${S.lenders.length.toLocaleString('en-US')} lenders</span></div>
+    ${stat('Loan to deposit', fmtP(l.ltd, 1), pts('ltd', l.ltd))}${stat('CRE lending capacity', capTxt, pts('cap', capOf(l)))}
+    ${stat(capitalName(l), fmtP(capitalOf(l)), pts('capital', capitalOf(l)))}${stat('Funding cost', fmtP(l.fc), pts('fc', l.fc))}
+  </div>
+  <p class="small">Each measure earns 4 points in the best quarter of all lenders nationally, down to 1 in the worst; a missing figure earns 1. ${capitalName(l)} and CRE lending capacity are ranked against the ${peers} only. Lower loan to deposit and funding cost rank higher.</p>
+  <div class="ld-stats ld-facts">${stat('Assets', money(l.ast, 0))}${stat('Investment CRE', money(l.inv, 0))}${stat('Est. lending limit', money(l.limit, 1))}</div></section>`;
   if (h) {
-    const qs = h.q, same = qs[qs.length - 1].slice(2), annual = qs.map((q, i) => i).filter(i => qs[i].slice(2) === same);
+    const qs = h.q, same = qs[qs.length - 1].slice(2), annual = qs.map((q, i) => i).filter(i => qs[i].slice(2) === same).reverse();   // newest first
     const build = idx => `<div class="table-wrap hist-wrap" tabindex="0" role="region" aria-label="History table"><table class="table hist"><thead><tr><th scope="col">Metric</th>${idx.map(i => `<th scope="col" class="n">${qs[i]}</th>`).join('')}</tr></thead><tbody>` +
       HIST_ROWS.map(r => r.length === 1 ? `<tr class="group"><td colspan="${idx.length + 1}">${r[0]}</td></tr>` : `<tr><th scope="row"${r[1].startsWith('  ') ? ' class="sub"' : ''}>${esc(r[1].trim())}</th>${idx.map(i => `<td class="n">${fmtH(h[r[0]] ? h[r[0]][i] : null, r[2])}</td>`).join('')}</tr>`).join('') + '</tbody></table></div>';
     html += `<section class="ld-section" aria-labelledby="ld-hist"><h3 id="ld-hist">History</h3>
       <div class="tabs" role="tablist" aria-label="History period"><button type="button" class="tab" role="tab" id="ht-a" aria-selected="true" aria-controls="hist-tbl" data-p="a">Same quarter each year (${same})</button><button type="button" class="tab" role="tab" id="ht-q" aria-selected="false" tabindex="-1" aria-controls="hist-tbl" data-p="q">All quarters</button></div>
       <div id="hist-tbl" role="tabpanel" aria-labelledby="ht-a">${build(annual)}</div></section>`;
-    S.histBuild = () => ({ annual: build(annual), all: build(qs.map((q, i) => i)) });
+    S.histBuild = () => ({ annual: build(annual), all: build(qs.map((q, i) => i).reverse()) });
   } else html += '<p class="meta">History unavailable.</p>';
   const bs = branchStats(id).sort((a, b) => (b.dep || 0) - (a.dep || 0)), miles = b => S.pt ? `<td class="n">${hav(S.pt.lat, S.pt.lon, b[2], b[3]).toFixed(1)}</td>` : '';
   html += `<section class="ld-section" aria-labelledby="ld-br"><h3 id="ld-br">Branches (${bs.length})</h3>`;
@@ -222,12 +238,11 @@ document.addEventListener('keydown', e => {
 
 /* ---------------- definitions (Definitions dialog on Map search, About page) ---------------- */
 const DEFS = [
-  ['Lists', 'The first list shows lenders whose main office is in the property\'s county. The second shows lenders headquartered elsewhere in the same state that have a branch in the county, or within the chosen number of miles. Each list is ordered by the likelihood-to-lend score (see "Score and tiers"). Lender HQ counties come from the main office in the FDIC and NCUA branch files. The property\'s county comes from the address lookup; for ZIP codes and dropped pins it is the county of the nearest bank or credit-union office.'],
-  ['Headline metrics', 'Loan to deposit, CRE lending capacity, capital ratio and funding cost are shown for every lender; credit unions also show CRE loans granted this year and their CRE loan rate, which banks do not report. Capital ratio: banks show the tier 1 leverage ratio, credit unions the NCUA net worth ratio (net worth / assets); the definitions are close but not identical.'],
+  ['Lists', 'The first list shows lenders whose main office is in the property\'s county. The second shows lenders headquartered elsewhere in the same state that have a branch in the county, or within the chosen number of miles. Each list is ordered by the national score (see "Score and grades"). Lender HQ counties come from the main office in the FDIC and NCUA branch files. The property\'s county comes from the address lookup; for ZIP codes and dropped pins it is the county of the nearest bank or credit-union office.'],
+  ['Headline metrics', 'Loan to deposit, CRE lending capacity, capital ratio and funding cost are shown for every lender; credit unions also show CRE loans granted this year and their CRE loan rate, which banks do not report. Capital ratio: banks show the tier 1 leverage ratio, credit unions the NCUA net worth ratio (net worth / assets); the definitions are close but not identical. A green box marks a figure in the top third of the lenders in the current search (both lists together): lower is better for loan to deposit, funding cost and CRE loan rate, higher for the rest. Tier 1 leverage is compared among the banks in the search; net worth ratio, CRE granted and CRE loan rate among the credit unions; lending capacity within each charter.'],
   ['CRE lending capacity', 'Banks: dollars of additional investment CRE (non-owner-occupied, multifamily, construction) before reaching 300% of capital, the level that draws extra regulatory scrutiny. "None" means the bank is already above 300%. Credit unions: dollars left under the statutory member-business-loan cap (lesser of 1.75× net worth or 12.25% of assets); low-income-designated credit unions are exempt and shown as "No cap". The two limits are different rules, so compare within a charter type.'],
   ['Scope', 'Every FDIC-insured bank and savings institution (FDIC BankFind Suite: Call Reports, Summary of Deposits) and every federally insured credit union (NCUA Form 5300), quarterly 2016Q1 to the latest quarter. Dollar figures in millions; negative amounts in brackets. History shows the same quarter each year so year-to-date items compare like with like.'],
-  ['Score and tiers', 'Each component is a national percentile (0-100). Score = weighted average × cap penalty. Components: CRE momentum (trailing 4-quarter change in investment or owner-occupied CRE as % of assets), CRE franchise (CRE share of loans and CRE % of capital), deposit growth (4 quarters), asset quality (lower NPLs; banks also CRE NPLs), capital (tier 1 leverage), margin (NIM). Tiers A-E are national quintiles. Default weights reflect which metrics predicted next-year CRE growth 2016-2026 out of sample (rank correlation 0.37 banks, 0.33 credit unions).'],
-  ['Cap penalty', 'Banks above 400% of capital in investment CRE ×0.85, above 500% ×0.70, construction above 150% ×0.90. Non-LICU credit unions at 90-100% of the business-loan cap ×0.80. These are the ranges where lending growth actually slowed historically; the 300% regulatory guidance alone did not.'],
+  ['Score and grades', 'Four measures, weighted equally: loan to deposit (lower is better), CRE lending capacity in dollars (higher is better), capital ratio (higher is better) and funding cost (lower is better). Each is ranked against every bank and credit union in the country and earns 4 points in the best quarter, 3, 2, or 1 in the worst; a missing figure earns 1. Tier 1 leverage is ranked among banks only, net worth ratio among credit unions only, and lending capacity within each charter because the bank and credit-union limits are different rules. Low-income-designated credit unions have no business-loan cap and earn 4 points for capacity. The score is the sum, 4 to 16. Grades: A+ for all 16 points, then A, B, C and D for the national quarters of the score (tied scores take the higher grade). The score sorts lenders; it is not a prediction of approval.'],
   ['Investment vs owner-occupied', 'Investment CRE = non-owner-occupied nonfarm nonresidential + multifamily + construction & land development (the 2006 interagency concentration definition). Owner-occupied = loans secured by owner-occupied nonfarm nonresidential property, which fall outside the 300% guidance. Call reports split only these categories: no office/retail/industrial detail exists.'],
   ['Capital base', 'Banks: total risk-based capital. About 1,800 community banks use the Community Bank Leverage Ratio and report no risk-based capital; for them tier 1 capital + loan-loss allowance is used (examiner convention) and the lender page says so. Credit unions: net worth.'],
   ['Credit-union business-loan cap', 'Statutory cap = lesser of 1.75× net worth or 12.25% of assets. Low-income-designated credit unions (about half) are exempt and shown as "exempt". Net member business loan balance per NCUA definition.'],
@@ -236,9 +251,9 @@ const DEFS = [
   ['CRE lent YTD', 'Net change in CRE balances since December 31, both charters; understates originations by payoffs. Credit unions additionally report real-estate-secured commercial loans granted year-to-date (count and dollars), shown as "granted" and "avg loan". Banks report no originations.'],
   ['CRE rate', 'Credit unions report the rate on real-estate-secured commercial loans (NCUA account 525, since 2017Q3). Banks report no loan-level rates; the blended loan yield (interest income / average loans) is shown for both.'],
   ['Non-performing loans', 'Banks: loans 90+ days past due plus nonaccrual, / gross loans. Credit unions: loans 60+ days delinquent / loans. Shown as reported; definitions differ.'],
-  ['Lending limit', 'Estimate = 15% of the capital base. National banks: 15% of capital and surplus unsecured (state limits range roughly 15-25%). Credit unions: 15% of net worth to one borrower. Used only to drop lenders that could not hold the requested amount alone.'],
+  ['Lending limit', 'Estimate = 15% of the capital base. National banks: 15% of capital and surplus unsecured (state limits range roughly 15-25%). Credit unions: 15% of net worth to one borrower. Used, with the remaining CRE lending capacity, by the loan amount box on the results page to hide lenders that could not hold the loan alone.'],
   ['Branches', 'Bank branch deposits: FDIC Summary of Deposits as of June 30 each year. Quartile = rank within the owning bank\'s non-main-office branches by deposits. Main offices are excluded because they often carry internet, brokered and corporate deposits. Credit-union branches are shown from the NCUA branch file without deposits; addresses were geocoded (Census), with ZIP-centroid fallback.'],
   ['Mergers', 'History is as reported under each charter. An acquired institution keeps its own pre-merger history; the acquirer shows its own.'],
-  ['Credit-union field of membership', 'Default results include community-charter credit unions and state charters (whose field of membership NCUA does not classify). Single- and multiple-common-bond credit unions can lend only to members and are hidden unless the box is checked.'],
+  ['Who is listed', 'Results include community-charter credit unions and state charters (whose field of membership NCUA does not classify). Single- and multiple-common-bond credit unions, which lend only to members of one employer or group, are left out, as are lenders that report no commercial real estate loans. The national score still ranks every lender.'],
 ];
 const defsHtml = () => '<dl class="defs">' + DEFS.map(d => `<div><dt>${d[0]}</dt><dd>${d[1]}</dd></div>`).join('') + '</dl>';
