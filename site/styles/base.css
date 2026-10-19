@@ -62,12 +62,15 @@ h3, .card-title {
 table, .num, .figures { font-variant-numeric: tabular-nums lining-nums; }
 .stat-value { font-variant-numeric: proportional-nums lining-nums; }
 
-/* ---- logo: the one place the display face is always in capitals ---- */
+/* ---- logo: the one place the display face is always in capitals; stamped like a primary button ---- */
 .logo {
   font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--logo-size); line-height: 1;
   text-transform: uppercase; letter-spacing: .03em; color: var(--logo-color); text-decoration: none; white-space: nowrap;
-  display: inline-flex; align-items: center; min-height: var(--tap-min);
+  display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 2px var(--space-3) 0;
+  background: var(--logo-fill); border: var(--border-width) solid var(--ink); box-shadow: var(--shadow-button);
 }
+a.logo:hover { background: color-mix(in srgb, var(--logo-fill) 84%, var(--ink)); }
+a.logo:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 
 /* ---- layout ---- */
 .container { width: 100%; max-width: calc(var(--container) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }

@@ -23,7 +23,8 @@
   --squiggle-color: var(--accent);
   --button-fill: var(--brand);
   --button-text: var(--on-brand);
-  --logo-color: var(--brand);
+  --logo-color: var(--on-accent);
+  --logo-fill: var(--accent);       /* stamped logo block; on-accent passes at the logo's 24px+ size (4.4:1) */
   --kicker-color: var(--brand);
   --kicker-on-band: var(--ink);  /* kicker color is 4.44:1 on surface */
   --pin-fill: var(--accent-text); /* accent fill was under 4.5:1 for 13px numbers, so pins use accent-text */
