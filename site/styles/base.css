@@ -1,0 +1,92 @@
+/* LenderMapper base: element defaults, type roles, logo, grid. Colors, fonts and sizes come from tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+  font-family: var(--font-body); font-weight: var(--body-weight); font-size: var(--body-size);
+  line-height: var(--body-leading); letter-spacing: var(--body-tracking); text-transform: var(--body-case);
+  color: var(--ink); background: var(--ground);
+}
+main { flex: 1; }
+a { color: var(--brand); text-decoration: underline; text-underline-offset: .15em; }
+img, video { display: block; max-width: 100%; height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; }
+p { margin: 0 0 var(--stack); }
+ul, ol { margin: 0 0 var(--stack); padding-left: var(--space-5); }
+b, strong { font-weight: var(--numbers-weight-strong); }
+hr { border: 0; border-top: 1px solid var(--line); margin: var(--block) 0; }
+
+/* ---- type roles ---- */
+.t-display, h1 {
+  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--display-size);
+  line-height: var(--display-leading); letter-spacing: var(--display-tracking); text-transform: var(--display-case); margin: 0;
+}
+.t-headline, h2 {
+  font-family: var(--font-headline); font-weight: var(--headline-weight); font-size: var(--headline-size);
+  line-height: var(--headline-leading); letter-spacing: var(--headline-tracking); text-transform: var(--headline-case); margin: 0;
+}
+h3, .card-title {
+  font-family: var(--font-headline); font-weight: var(--headline-weight); font-size: var(--card-title-size);
+  line-height: var(--headline-leading); letter-spacing: var(--headline-tracking); text-transform: var(--headline-case); margin: 0;
+}
+.t-label {
+  font-family: var(--font-label); font-weight: var(--label-weight); font-size: var(--label-size);
+  line-height: var(--label-leading); letter-spacing: var(--label-tracking); text-transform: var(--label-case);
+}
+.t-nav {
+  font-family: var(--font-nav); font-weight: var(--nav-weight); font-size: var(--nav-size);
+  line-height: var(--nav-leading); letter-spacing: var(--nav-tracking); text-transform: var(--nav-case);
+}
+/* product and item names (lenders): the nav face in title case */
+.t-product {
+  font-family: var(--font-product); font-weight: var(--product-weight); font-size: var(--product-size);
+  line-height: var(--product-leading); letter-spacing: var(--product-tracking); text-transform: var(--product-case);
+}
+.t-body {
+  font-family: var(--font-body); font-weight: var(--body-weight); font-size: var(--body-size);
+  line-height: var(--body-leading); letter-spacing: var(--body-tracking); text-transform: var(--body-case);
+}
+.t-numbers {
+  font-family: var(--font-numbers); font-weight: var(--numbers-weight); font-size: var(--numbers-size);
+  line-height: var(--numbers-leading); letter-spacing: var(--numbers-tracking); text-transform: var(--numbers-case);
+}
+
+/* interface text: help, captions, meta lines */
+.small, .help, .caption, .meta, figcaption {
+  font-family: var(--font-numbers); font-size: var(--small-size); line-height: 1.45; color: var(--muted);
+}
+.lede { font-size: var(--product-size); max-width: 60ch; }
+.muted { color: var(--muted); }
+
+/* figures: tabular in tables and columns, proportional for single large figures */
+table, .num, .figures { font-variant-numeric: tabular-nums lining-nums; }
+.stat-value { font-variant-numeric: proportional-nums lining-nums; }
+
+/* ---- logo: the one place the display face is always in capitals ---- */
+.logo {
+  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--logo-size); line-height: 1;
+  text-transform: uppercase; letter-spacing: .03em; color: var(--logo-color); text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: var(--tap-min);
+}
+
+/* ---- layout ---- */
+.container { width: 100%; max-width: calc(var(--container) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.container-data { width: 100%; max-width: calc(var(--container-data) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+/* 4 columns on phone, 8 from 600px, 12 from 900px. Children set --span (desktop), --span-tablet, --span-phone. */
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+.grid > * { grid-column: span var(--span-phone, 4); min-width: 0; }
+@media (min-width: 600px) {
+  .grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .grid > * { grid-column: span var(--span-tablet, 8); }
+}
+@media (min-width: 900px) {
+  .grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .grid > * { grid-column: span var(--span, 12); }
+}
+.stack > * + * { margin-top: var(--stack); }
+
+/* ---- accessibility helpers ---- */
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.skip-link { position: absolute; left: var(--space-4); top: -100px; z-index: 100; padding: var(--space-2) var(--space-4); background: var(--paper); color: var(--ink); border: var(--border-width) solid var(--ink); }
+.skip-link:focus { top: var(--space-2); }
+[hidden] { display: none !important; }

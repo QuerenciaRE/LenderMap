@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watchlist · LenderMapper</title>
+<meta name="description" content="Design reference: tool screen with sidebar, stats, tabs, filters, a selectable table and an edit drawer.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body class="page-tool">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html">Lender lookup</a>
+      <a class="t-nav" href="about.html">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html">Lender lookup</a><a href="about.html">About</a></nav>
+</div>
+
+<main id="main">
+<div class="container-data tool-shell">
+  <aside class="tool-side" aria-label="Workspace">
+    <span class="t-label muted">Workspace</span>
+    <nav class="side-nav" aria-label="Workspace">
+      <a href="#" aria-current="page"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-bookmark"/></svg>Watchlist</a>
+      <a href="#"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-map-pin"/></svg>Saved searches</a>
+      <a href="#"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-bell"/></svg>Alerts</a>
+      <a href="#"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-settings"/></svg>Settings</a>
+    </nav>
+  </aside>
+
+  <div class="tool-main">
+    <div class="tool-head">
+      <div><span class="kicker">Watchlist</span><h1 class="tool-title">Lenders to call</h1></div>
+      <a class="button button-primary" href="lookup.html">Add a lender</a>
+    </div>
+    <div class="note" role="note"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg><p>Design reference with sample data. These are not real lenders, and nothing here is saved.</p></div>
+
+    <section class="stat-row" aria-label="Summary">
+      <div class="stat"><span class="stat-label">Lenders saved</span><span class="stat-value">8</span><span class="small">5 banks, 3 credit unions</span></div>
+      <div class="stat"><span class="stat-label">Tier A or B</span><span class="stat-value">5</span><span class="small">National top 40%</span></div>
+      <div class="stat"><span class="stat-label">Median loan to deposit</span><span class="stat-value">86.4%</span><span class="small">Across the list</span></div>
+      <div class="stat"><span class="stat-label">CRE lending capacity</span><span class="stat-value">$412.6M</span><span class="small">Sum of room under limits</span></div>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Lender type">
+      <button type="button" class="tab" role="tab" aria-selected="true" aria-controls="wl-panel" id="tab-all" data-f="all">All (8)</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="wl-panel" id="tab-b" data-f="B">Banks (5)</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" aria-controls="wl-panel" id="tab-c" data-f="C">Credit unions (3)</button>
+    </div>
+    <div id="wl-panel" role="tabpanel" aria-labelledby="tab-all" class="tool-panel">
+      <div class="filter-bar" role="search" aria-label="Filter the watchlist">
+        <div class="field fb-search"><label class="field-label vh" for="wl-q">Filter by name</label><span class="input-wrap lead"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg><input class="input" id="wl-q" type="text" placeholder="Filter by name"></span></div>
+        <div class="field"><label class="field-label vh" for="wl-st">Status</label><span class="input-wrap trail"><select class="input" id="wl-st"><option value="">Any status</option><option>Not contacted</option><option>Called</option><option>Term sheet</option><option>Passed</option></select><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-chevron-down"/></svg></span></div>
+        <div class="chip-row" aria-label="Quick filters" role="group">
+          <button type="button" class="chip" aria-pressed="false" data-chip="ab">Tier A or B<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+          <button type="button" class="chip" aria-pressed="false" data-chip="cap">Has capacity<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+        </div>
+      </div>
+      <div class="bulk" id="bulk" hidden><span id="bulk-n" class="t-nav"></span><button type="button" class="button button-secondary button-sm" id="bulk-clear">Clear selection</button></div>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Watchlist table">
+        <table class="table actions" id="wl">
+          <caption class="vh">Watchlist, sample data</caption>
+          <thead><tr><th scope="col" class="c"><input type="checkbox" class="checkbox" id="sel-all" aria-label="Select all rows"></th><th scope="col">Lender</th><th scope="col">Type</th><th scope="col">Tier</th><th scope="col" class="n">Capacity $M</th><th scope="col" class="n">Loan to deposit</th><th scope="col" class="n">CRE growth, 4Q</th><th scope="col">Status</th><th scope="col" class="c"><span class="vh">Edit</span></th></tr></thead>
+          <tbody id="wl-rows"></tbody>
+        </table>
+      </div>
+      <p class="small">Capacity: room under 300% of capital (banks) or the business-loan cap (credit unions). Negative amounts in brackets mean the lender is already over.</p>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+<div id="edit" class="scrim hidden" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div class="drawer">
+  <div class="drawer-head"><h2 class="card-title" id="edit-title">Edit</h2><button type="button" class="icon-button bare" data-close aria-label="Close"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <form class="drawer-body edit-form" id="edit-form" novalidate>
+    <p class="meta" id="edit-meta"></p>
+    <div class="field"><label class="field-label" for="ed-status">Status</label><span class="input-wrap trail"><select class="input" id="ed-status"><option>Not contacted</option><option>Called</option><option>Term sheet</option><option>Passed</option></select><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-chevron-down"/></svg></span></div>
+    <div class="field" id="ed-email-f"><label class="field-label" for="ed-email">Loan officer email</label><input class="input" id="ed-email" type="email" autocomplete="off" aria-describedby="ed-email-msg"><p class="field-help" id="ed-email-msg">Optional.</p></div>
+    <div class="field"><label class="field-label" for="ed-note">Note</label><textarea class="input" id="ed-note" placeholder="What they said, next step"></textarea></div>
+    <div class="toggle-row"><span class="field-label" id="ed-alert-l">Alert me when a new quarter posts</span><button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="ed-alert-l" id="ed-alert"><span class="toggle-knob"></span></button></div>
+  </form>
+  <div class="drawer-foot"><button type="button" class="button button-text" data-close>Cancel</button><button type="submit" form="edit-form" class="button button-primary">Save</button></div>
+</div></div>
+<script src="core.js"></script>
+<script>
+'use strict';
+// sample rows for the design reference (not real lenders)
+const ROWS = [
+  ['Courthouse Square Bank', 'B', 'A', 48.2, 88.4, 2.4, 'Called'],
+  ['Prairie Line Credit Union', 'C', 'A', 61.5, 79.2, 1.9, 'Not contacted'],
+  ['Millrace Savings', 'B', 'B', 12.7, 91.0, 0.8, 'Term sheet'],
+  ['Granary District Bank', 'B', 'B', 104.3, 84.1, 0.3, 'Not contacted'],
+  ['Teachers Community CU', 'C', 'B', 33.9, 71.6, 1.2, 'Called'],
+  ['Ridgeway State Bank', 'B', 'C', -14.6, 97.1, -0.6, 'Not contacted'],
+  ['Riverbend Federal CU', 'C', 'D', 9.8, 66.3, -0.2, 'Passed'],
+  ['Union Depot National Bank', 'B', 'E', -370, 102.5, -1.8, 'Passed'],
+].map(([n, c, tier, cap, ltd, g, st], i) => ({ id: 'r' + i, n, c, tier, cap, ltd, g, st, note: '', email: '', alert: true }));
+const F = { type: 'all', q: '', st: '', ab: false, capOn: false }, sel = new Set();
+function shown() { return ROWS.filter(r => (F.type === 'all' || r.c === F.type) && (!F.q || r.n.toLowerCase().includes(F.q)) && (!F.st || r.st === F.st) && (!F.ab || 'AB'.includes(r.tier)) && (!F.capOn || r.cap > 0)); }
+function render() {
+  const rows = shown();
+  $('wl-rows').innerHTML = rows.map(r => `<tr aria-selected="${sel.has(r.id)}"><td class="c"><input type="checkbox" class="checkbox" data-sel="${r.id}" ${sel.has(r.id) ? 'checked' : ''} aria-label="Select ${esc(r.n)}"></td><td><span class="t-product">${esc(r.n)}</span></td><td>${r.c === 'B' ? 'Bank' : 'Credit union'}</td><td><span class="tier t${r.tier}">${r.tier}</span></td><td class="n">${fmtM(r.cap, 1)}</td><td class="n">${fmtP(r.ltd, 1)}</td><td class="n">${fmtChg(r.g)}</td><td>${esc(r.st)}</td><td class="c"><button type="button" class="icon-button bare" data-edit="${r.id}" aria-label="Edit ${esc(r.n)}">${ICON('pencil')}</button></td></tr>`).join('') || '<tr><td colspan="9" class="na">No lenders match these filters.</td></tr>';
+  const vis = rows.filter(r => sel.has(r.id)).length;
+  $('sel-all').checked = rows.length > 0 && vis === rows.length; $('sel-all').indeterminate = vis > 0 && vis < rows.length;
+  $('bulk').hidden = !sel.size; $('bulk-n').textContent = `${sel.size} selected`;
+}
+wireTabs(document.querySelector('[role=tablist]'), t => { F.type = t.dataset.f; $('wl-panel').setAttribute('aria-labelledby', t.id); render(); });
+$('wl-q').addEventListener('input', e => { F.q = e.target.value.trim().toLowerCase(); render(); });
+$('wl-st').addEventListener('change', e => { F.st = e.target.value; render(); });
+document.querySelectorAll('[data-chip]').forEach(c => c.addEventListener('click', () => { const on = c.getAttribute('aria-pressed') !== 'true'; c.setAttribute('aria-pressed', String(on)); F[c.dataset.chip === 'ab' ? 'ab' : 'capOn'] = on; render(); }));
+$('wl-rows').addEventListener('change', e => { const id = e.target.dataset.sel; if (!id) return; e.target.checked ? sel.add(id) : sel.delete(id); render(); });
+$('sel-all').addEventListener('change', e => { shown().forEach(r => e.target.checked ? sel.add(r.id) : sel.delete(r.id)); render(); });
+$('bulk-clear').addEventListener('click', () => { sel.clear(); render(); $('sel-all').focus(); });
+let editing = null;
+$('wl-rows').addEventListener('click', e => {
+  const b = e.target.closest('[data-edit]'); if (!b) return;
+  editing = ROWS.find(r => r.id === b.dataset.edit);
+  $('edit-title').textContent = editing.n; $('edit-meta').textContent = `${editing.c === 'B' ? 'Bank' : 'Credit union'} · Tier ${editing.tier}`;
+  $('ed-status').value = editing.st; $('ed-note').value = editing.note; $('ed-email').value = editing.email; $('ed-alert').setAttribute('aria-checked', String(editing.alert));
+  setEmailError(false); openDialog('edit');
+});
+$('ed-alert').addEventListener('click', e => { const t = e.currentTarget; t.setAttribute('aria-checked', String(t.getAttribute('aria-checked') !== 'true')); });
+function setEmailError(on) {
+  $('ed-email-f').classList.toggle('has-error', on); $('ed-email').setAttribute('aria-invalid', String(on));
+  const m = $('ed-email-msg'); m.className = on ? 'field-error' : 'field-help';
+  m.innerHTML = on ? `${ICON('circle-alert')}Enter a full email address, like name@bank.com, or leave it blank.` : 'Optional.';
+}
+$('edit-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const em = $('ed-email').value.trim();
+  if (em && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { setEmailError(true); $('ed-email').focus(); return; }
+  Object.assign(editing, { st: $('ed-status').value, note: $('ed-note').value, email: em, alert: $('ed-alert').getAttribute('aria-checked') === 'true' });
+  closeDialog('edit'); render();
+});
+render();
+</script>
+<script src="site.js"></script>
+</body>
+</html>

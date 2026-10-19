@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LenderMapper</title>
+<meta name="description" content="Design reference: LenderMapper landing page.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+</head>
+<body class="page-landing">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html">Lender lookup</a>
+      <a class="t-nav" href="about.html">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html">Lender lookup</a><a href="about.html">About</a></nav>
+</div>
+
+<main id="main">
+<section class="band hero-band" aria-labelledby="hero-h">
+  <div class="container grid hero-grid">
+    <div class="hero-copy" style="--span: 6; --span-tablet: 8">
+      <span class="kicker">Commercial real estate lenders</span>
+      <h1 id="hero-h">Find the lender already lending on your street</h1>
+      <p class="lede">Type a property address. LenderMapper lists the banks and credit unions based in that county, then the ones with a branch nearby, ranked by how likely they are to make a commercial real estate loan.</p>
+      <div class="hero-actions">
+        <a class="button button-primary button-lg" href="./#search">Search an address</a>
+        <a class="button button-secondary button-lg" href="#how">How it works</a>
+      </div>
+      <p class="small">A Querencia tool, est. 2026. Free, and built only from public call reports.</p>
+    </div>
+    <div class="hero-media" style="--span: 6; --span-tablet: 8">
+      <figure class="frame">
+        <!-- Photo to come: set style="background-image:url(assets/photos/hero.webp)" and remove image-missing -->
+        <div class="photo hero-image image-missing" role="img" aria-label="Placeholder for a photo of a small-town bank branch on a main street"></div>
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><path id="stamp-ring-path" d="M60 60m-47 0a47 47 0 1 1 94 0a47 47 0 1 1-94 0"/></defs><circle class="stamp-disc" cx="60" cy="60" r="58"/><circle class="stamp-ring" cx="60" cy="60" r="40"/><text class="stamp-text"><textPath href="#stamp-ring-path" textLength="295" lengthAdjust="spacingAndGlyphs">LENDERMAPPER • A QUERENCIA TOOL •</textPath></text><text class="stamp-mark" x="60" y="57" text-anchor="middle" font-size="17">EST.</text><text class="stamp-mark" x="60" y="80" text-anchor="middle" font-size="22">2026</text></svg></span>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="container page-section" aria-labelledby="ways-h">
+  <div class="section-head"><h2 id="ways-h">Three ways in</h2></div>
+  <ul class="card-grid">
+    <li><a class="card" href="./">
+      <div class="card-image illustration-panel"><svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M8 72h104M8 88h104M30 62v32M90 62v32"/><path d="M60 66C48 52 42 42 42 34a18 18 0 0 1 36 0c0 8-6 18-18 32z"/><circle cx="60" cy="34" r="6"/></svg></div>
+      <div class="card-body"><span class="kicker">Map search</span><span class="card-title">Start from the property</span><p>Enter an address and see every bank and credit union based in the county, on a map, in ranked order.</p><p class="meta">Most borrowers start here</p></div>
+    </a></li>
+    <li><a class="card" href="lookup.html">
+      <div class="card-image illustration-panel"><svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M20 34 60 12l40 22z"/><path d="M24 40h72M30 46v30M48 46v30M72 46v30M90 46v30"/><path d="M18 82h84M12 90h96"/></svg></div>
+      <div class="card-body"><span class="kicker">Lender lookup</span><span class="card-title">Check one lender</span><p>Ten years of call-report history and every branch for any insured bank or credit union.</p><p class="meta">Every insured bank and credit union</p></div>
+    </a></li>
+    <li><a class="card" href="about.html">
+      <!-- Missing image: the pattern block stands in until a photo exists -->
+      <div class="card-image photo image-missing" role="img" aria-label="Placeholder for a photo of a loan officer reviewing a site plan"></div>
+      <div class="card-body"><span class="kicker">About the score</span><span class="card-title">See how the ranking works</span><p>Six parts, national percentiles, and the out-of-sample test that set the weights.</p><p class="meta">5 minute read</p></div>
+    </a></li>
+  </ul>
+</section>
+
+<section class="container page-section" id="how" aria-labelledby="how-h">
+  <div class="section-head"><h2 id="how-h">How it works</h2></div>
+  <ol class="steps">
+    <li>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M30 80V46l30-24 30 24v34z"/><path d="M52 80V60h16v20"/><path d="M14 80h92"/></svg>
+      <span class="list-number" aria-hidden="true">1</span>
+      <div><h3>Enter the property</h3><p>An address, a city and state, or a ZIP code.</p></div>
+    </li>
+    <li>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><circle cx="60" cy="48" r="40"/><circle cx="60" cy="48" r="22" stroke-dasharray="4 6"/><path d="M60 40v16M52 48h16"/></svg>
+      <span class="list-number" aria-hidden="true">2</span>
+      <div><h3>See local lenders first</h3><p>Lenders based in the county, then lenders from elsewhere in the state with a branch nearby.</p></div>
+    </li>
+    <li>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M14 86h92"/><path d="M24 86V62h14v24M53 86V46h14v40M82 86V30h14v56"/><path d="M22 40l26-16 18 8 32-20"/></svg>
+      <span class="list-number" aria-hidden="true">3</span>
+      <div><h3>Open any lender</h3><p>The score, its six parts, ten years of history and every branch.</p></div>
+    </li>
+  </ol>
+</section>
+
+<div class="container"><div class="divider" aria-hidden="true"></div></div>
+
+<section class="container page-section feature" aria-labelledby="feat-h">
+  <div class="grid">
+    <div style="--span: 6; --span-tablet: 8">
+      <figure class="frame">
+        <div class="photo feature-image image-missing" role="img" aria-label="Placeholder for a photo of a stack of printed quarterly call reports"></div>
+      </figure>
+    </div>
+    <div class="feature-copy" style="--span: 6; --span-tablet: 8">
+      <span class="kicker">The data</span>
+      <h2 id="feat-h">Built from the filings no lender can skip</h2>
+      <p>Every insured bank and credit union files a call report each quarter. LenderMapper reads all of them, back to 2016, and turns the commercial real estate lines into a ranking you can check line by line.</p>
+      <p>Nothing is self-reported to us and nobody pays to rank higher. Sponsored placements are labelled and sit outside the ranked lists.</p>
+      <a class="button button-text" href="about.html">Read about the method</a>
+    </div>
+  </div>
+</section>
+
+<section class="band newsletter" aria-labelledby="news-h">
+  <div class="container newsletter-inner">
+    <div>
+      <span class="kicker">Quarterly note</span>
+      <h2 id="news-h">Get the new quarter's numbers</h2>
+      <p class="muted">One short email when new call reports land: which lenders moved up a tier in your state.</p>
+    </div>
+    <form class="newsletter-form" id="news-form" novalidate>
+      <div class="field" id="news-field">
+        <label class="field-label" for="news-email">Email address</label>
+        <div class="searchbar-row"><input class="input" id="news-email" type="email" autocomplete="email" aria-describedby="news-msg"><button class="button button-primary" type="submit">Sign up</button></div>
+        <p class="field-help" id="news-msg">Sign-ups open soon. This form does not send anything yet.</p>
+      </div>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+<script>
+'use strict';
+// reference only: shows the field error state; nothing is sent
+document.getElementById('news-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = document.getElementById('news-field'), v = document.getElementById('news-email').value.trim(), msg = document.getElementById('news-msg');
+  const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+  f.classList.toggle('has-error', !ok);
+  document.getElementById('news-email').setAttribute('aria-invalid', String(!ok));
+  msg.className = ok ? 'field-help' : 'field-error';
+  msg.innerHTML = ok ? 'Thanks. Sign-ups open soon; nothing was sent.' : '<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-circle-alert"/></svg>Enter an email address like name@example.com.';
+});
+</script>
+<script src="site.js"></script>
+</body>
+</html>

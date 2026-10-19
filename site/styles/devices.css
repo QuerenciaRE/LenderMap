@@ -1,0 +1,46 @@
+/* LenderMapper graphic devices, Press kit: double rules, boxed kickers, a round stamp, offset photo blocks, halftone bands.
+   Devices are decoration (aria-hidden or CSS-generated). Tool screens, forms, tables, charts and maps get none;
+   only section rules and kickers carry over to them. Nothing animates. */
+
+/* Section rules: double */
+.section-head { border-top: 6px double var(--rule-color); padding-top: 14px; }
+.section-head > * + * { margin-top: var(--space-2); }
+
+/* Dividers: stars */
+.divider { text-align: center; color: var(--squiggle-color); margin: var(--block) 0; line-height: 1; }
+.divider::before { content: "\2731\00a0\00a0\2731\00a0\00a0\2731"; font-size: 18px; letter-spacing: .2em; }
+
+/* Badges: stamp. Inline SVG, 120px (92px on phones), rotated, pinned 22px outside the hero image's top-right corner. */
+.badge { position: absolute; top: -22px; right: -22px; z-index: 2; width: 120px; height: 120px; transform: rotate(-10deg); pointer-events: none; }
+.badge svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.badge .stamp-disc { fill: var(--brand); }
+.badge .stamp-ring { fill: none; stroke: var(--on-brand); stroke-width: 1.5; }
+.badge .stamp-text { fill: var(--on-brand); font-family: var(--font-label); font-weight: var(--label-weight); font-size: 10.5px; letter-spacing: var(--label-tracking); }
+.badge .stamp-mark { fill: var(--on-brand); font-family: var(--font-display); font-weight: var(--display-weight); }
+@media (max-width: 599px) {
+  .badge { width: 92px; height: 92px; top: -14px; right: 6px; }
+}
+
+/* Image frames: offset */
+.frame { position: relative; isolation: isolate; margin: 0 16px 16px 0; }
+.frame::before { content: ""; position: absolute; inset: 0; transform: translate(16px, 16px); background: var(--accent); z-index: -1; }
+.frame > .photo { border: 2px solid var(--ink); }
+
+/* Band patterns: halftone. Full-width sections on the surface color; muted text turns ink, kickers use --kicker-on-band. */
+.band { background-color: var(--surface); }
+.band { background-image: radial-gradient(color-mix(in srgb, var(--ink) 11%, transparent) 1.3px, transparent 1.7px); background-size: 11px 11px; }
+.band :is(.muted, .small, .help, .caption, .meta, .field-help, figcaption) { color: var(--ink); }
+.band .kicker { color: var(--kicker-on-band); }
+
+/* Emphasis: none */
+/* No emphasis treatment. */
+
+/* Kickers: boxed */
+.kicker {
+  display: inline-block; width: max-content; max-width: 100%; padding: 4px 7px 3px; border: 1.5px solid currentColor; color: var(--kicker-color);
+  font-family: var(--font-label); font-weight: var(--label-weight); font-size: var(--label-size); line-height: var(--label-leading);
+  letter-spacing: var(--label-tracking); text-transform: var(--label-case);
+}
+
+/* List numbers: big */
+.list-number { font: var(--display-weight) 48px/.85 var(--font-display); color: var(--accent-text); min-width: 36px; }
