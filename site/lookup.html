@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lender lookup · LenderMapper</title>
+<meta name="description" content="Look up any FDIC-insured bank or federally insured credit union: likelihood-to-lend score for commercial real estate, call-report history and branches.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body class="page-lookup">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html" aria-current="page">Lender lookup</a>
+      <a class="t-nav" href="about.html">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html" aria-current="page">Lender lookup</a><a href="about.html">About</a></nav>
+</div>
+
+<main id="main">
+<div class="container-data">
+  <section class="lookup-hero" aria-labelledby="lk-h">
+    <span class="kicker">Lender lookup</span>
+    <h1 id="lk-h">Look up any bank or credit union</h1>
+    <p class="lede">Every FDIC-insured bank and federally insured credit union: its score, ten years of call-report history and every branch.</p>
+    <form class="lookup-search" id="lk-form" role="search" aria-label="Lender name">
+      <div class="field">
+        <label class="field-label" for="lname">Lender name</label>
+        <div class="searchbar-row">
+          <span class="input-wrap lead"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg><input id="lname" class="input" type="text" placeholder="Name or initials, e.g. First National or TDECU" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lsugg" aria-describedby="lk-help" disabled></span>
+          <button type="submit" class="button button-primary" id="lk-go" disabled>Search</button>
+        </div>
+        <p class="field-help" id="lk-help" aria-live="polite">Loading the lender list…</p>
+      </div>
+      <ul id="lsugg" class="suggest" role="listbox" aria-label="Matching lenders" hidden></ul>
+    </form>
+  </section>
+
+  <section class="lookup-results" id="lk-results" aria-labelledby="lk-res-h" hidden>
+    <div class="section-head"><h2 id="lk-res-h" class="card-title">Matches</h2><p class="small" id="lk-count"></p></div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Matching lenders">
+      <table class="table actions">
+        <thead><tr><th scope="col">Lender</th><th scope="col">Type</th><th scope="col">Headquarters</th><th scope="col" class="n">Assets $M</th><th scope="col" class="n">Offices</th><th scope="col">Tier</th></tr></thead>
+        <tbody id="lk-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="lookup-profile" id="lk-profile" aria-label="Lender profile" hidden></section>
+</div>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+
+<script src="site.js"></script>
+<script src="core.js"></script>
+<script src="lookup.js"></script>
+</body>
+</html>

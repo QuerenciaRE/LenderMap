@@ -1,0 +1,18 @@
+/* LenderMapper imagery, Film set: warm, slightly grainy photos in classic proportions, line illustrations,
+   and a patterned block when a photo is missing. One treatment on every photo; never on logos or maps. */
+.photo { position: relative; overflow: hidden; background-size: cover; background-position: center; border-radius: var(--radius-card); }
+/* Treatment: film */
+.photo { filter: sepia(.22) saturate(1.15) contrast(1.06) brightness(1.02); }
+.photo::after { content: ""; position: absolute; inset: 0; background-image: url(../assets/grain.svg); mix-blend-mode: multiply; pointer-events: none; }
+/* Proportions: classic */
+.hero-image { aspect-ratio: var(--ratio-hero); }
+.card-image { aspect-ratio: var(--ratio-card); }
+.feature-image { aspect-ratio: var(--ratio-feature); }
+.banner-image { aspect-ratio: var(--ratio-banner); }
+/* Missing image: pattern */
+.image-missing { background-color: color-mix(in srgb, var(--brand) 12%, var(--ground));
+  background-image: radial-gradient(color-mix(in srgb, var(--brand) 35%, transparent) 1.4px, transparent 1.8px); background-size: 10px 10px; }
+
+/* Illustrations: line drawings, no fills, 2px ink strokes at 120px wide, round caps and joins. Inline SVG. */
+.illustration { display: block; width: 120px; height: auto; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.illustration-panel { display: flex; align-items: center; justify-content: center; background: var(--surface); }

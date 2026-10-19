@@ -12,13 +12,21 @@ the scorecard, and the roadmap.
 - `scripts/` Python data pipeline. `run_all.sh` runs everything in order: FDIC + NCUA + FRED downloads -> parse ->
   `build_metrics.py` (harmonized quarterly metrics) -> `build_lenders.py` (directory + branches) -> Census geocoding
   of credit-union addresses -> `model_panel.py` (macro.json) -> `package_site.py` (JSON for the site).
-- `site/` the website: `index.html`, `app.css`, `app.js` (vanilla JS + MapLibre GL from cdnjs; no build step).
+- `site/` the website, branded LenderMapper (vanilla JS + MapLibre GL from cdnjs; no build step). Pages: `index.html`
+  (Map search, `app.js`), `lookup.html` (Lender lookup, `lookup.js`), `about.html`. `core.js` is shared by both tools
+  (data loading, scoring, lender details, name search, dialogs, `DEFS`); `site.js` is the phone menu on every page.
   `site/data/` is generated, never committed. Landing page asks only for the property address. Results page: two lists
   (1: lenders headquartered in the property's county; 2: lenders headquartered elsewhere in the state with a branch in
   the county or within N miles), each ordered by score, with the map on the right. Cards show only the headline
   metrics: loan/deposit, CRE lending capacity, tier 1 leverage (bank) / net worth ratio (CU), funding cost, and for
   CUs CRE granted YTD + CRE rate. Loan use, amount, lender types, membership and weights live in the Filters modal.
-  County matching: `cty` (lender HQ county) and branch index 10 come from `package_site.py`; `app.js::CTY` normalizes names.
+  County matching: `cty` (lender HQ county) and branch index 10 come from `package_site.py`; `core.js::CTY` normalizes names.
+- Design system (from Brand Builder): `site/styles/tokens.css` holds every color, font and size; `base.css`,
+  `components.css` (Stamped), `devices.css` (Press), `imagery.css` (Film), `pages.css` (layout), `app.css` (the two
+  tools). No hex colors or font names outside `tokens.css`; map colors are read from the tokens in JS (`core.js::TOK`).
+  Tool screens get no graphic devices except section rules and kickers. Reference pages (not linked from the nav):
+  `styleguide.html`, `landing.html`, `article.html`, `tool.html`. Icons: Lucide sprite `site/assets/icons.svg`.
+  Photo slots show the missing-image pattern until real photos are added under `site/assets/photos/`.
 - `site/featured.json` (hand-edited, committed): paid placements for the landing rows and the one "Sponsored" slot above
   results. `id` is the site id (`B` + FDIC cert, `C` + NCUA charter). Entries with `"placeholder": true` show only on
   `?preview=1` or a local copy. Placements must never change score, tier or ranked order; paid ones always say "Sponsored".
@@ -61,18 +69,21 @@ the scorecard, and the roadmap.
   repossessed assets, autos included), bank 30-89 days past due. Optional FDIC fields are probed in `dl_fdic.py` and
   dropped if the API rejects them; `build_metrics.py` logs how many lenders have each field filled.
 
-## Scorecard (client-side, `app.js::scoreOf`)
+## Scorecard (client-side, `core.js::scoreOf`)
 
 Components are national percentiles computed in `package_site.py` (`sc` object per lender): CRE momentum, CRE
 franchise, deposit growth, asset quality, capital, margin. Default weights 25/25/15/15/10/10 came from the
 out-of-sample study in `docs/HANDOFF.md`. Penalties: >400% investment CRE/capital x0.85, >500% x0.70, construction
 >150% x0.90, CU MBL cap 90-100% used x0.80, no CRE on the books x0.5. Tiers A-E = national quintiles of the score.
-Changing component definitions means editing both `package_site.py` (percentiles) and `app.js` (weights, Definitions text).
+Changing component definitions means editing both `package_site.py` (percentiles) and `core.js` (weights, Definitions text).
 
 ## Conventions
 
 - Keep the site dependency-free apart from MapLibre; everything must work as static files on GitHub Pages.
-- Any new metric: add to `build_metrics.py`, then `KEYS` in `package_site.py`, then `COLS`/`HIST_ROWS`/`DEFS` in `app.js`.
-- Footnote every bank-vs-credit-union definitional difference in the Definitions modal (`DEFS` in `app.js`).
-- Dollar columns are $M with one decimal; ratios in percent with two decimals; years shown as same-quarter series.
+- Any new metric: add to `build_metrics.py`, then `KEYS` in `package_site.py`, then `COLS` (CSV) in `app.js` and
+  `HIST_ROWS`/`DEFS` in `core.js`.
+- Footnote every bank-vs-credit-union definitional difference in the Definitions (`DEFS` in `core.js`; shown in the
+  Map search dialog and on the About page).
+- Dollar columns are $M with one decimal, negatives in brackets; ratios in percent with two decimals; changes as a
+  triangle plus a signed value (`core.js::fmtChg`); years shown as same-quarter series.
 - Commit messages: short imperative summary. Run the smoke test before pushing UI changes when Node is available.

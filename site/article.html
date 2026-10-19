@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One county, five lenders · LenderMapper</title>
+<meta name="description" content="Design reference: long read with a sticky numbered map and place cards.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body class="page-article">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html">Lender lookup</a>
+      <a class="t-nav" href="about.html">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html">Lender lookup</a><a href="about.html">About</a></nav>
+</div>
+
+<main id="main">
+<article class="container-data article">
+  <header class="read-head container-narrow">
+    <span class="kicker">Field guide</span>
+    <h1>One county, five lenders: reading the call reports behind the ranking</h1>
+    <p class="lede">Every county has the same handful of lender types. Here is what each one's quarterly filing says about whether it will look at your loan, using a made-up county and rounded, illustrative numbers.</p>
+    <p class="meta">8 minute read · Illustrative figures, not real lenders</p>
+  </header>
+
+  <div class="article-split">
+    <div class="article-body">
+      <p class="article-intro">The ranking on LenderMapper boils each lender down to six numbers. Read one county from the courthouse outward and the pattern is easy to see: the lenders most likely to say yes are the ones already growing their commercial real estate book, with room left under their limits.</p>
+
+      <ol class="places">
+        <li class="place" id="place-1" data-pin="1">
+          <span class="list-number" aria-hidden="true">1</span>
+          <div class="card">
+            <div class="card-body">
+              <span class="kicker">Headquartered in the county</span>
+              <h2 class="card-title t-product">The County-Seat Bank</h2>
+              <p class="meta">Bank · Main office on the courthouse square · 6 branches</p>
+              <dl class="place-figures">
+                <div><dt>Tier</dt><dd><span class="tier tA">A</span></dd></div>
+                <div><dt>Inv. CRE / capital</dt><dd>280%</dd></div>
+                <div><dt>Loan to deposit</dt><dd>88.40%</dd></div>
+                <div><dt>CRE growth, 4Q</dt><dd><span class="up"><span aria-hidden="true">▲</span> +2.4%</span></dd></div>
+              </dl>
+              <p>The textbook yes. Its CRE book grew faster than its assets last year, and at 280% of capital it still has room before the 300% level that draws extra scrutiny. A local bank this active will usually know the property already.</p>
+            </div>
+          </div>
+        </li>
+        <li class="place" id="place-2" data-pin="2">
+          <span class="list-number" aria-hidden="true">2</span>
+          <div class="card">
+            <div class="card-body">
+              <span class="kicker">Headquartered in the county</span>
+              <h2 class="card-title t-product">The Community Credit Union</h2>
+              <p class="meta">Credit union · Community charter · 4 branches</p>
+              <dl class="place-figures">
+                <div><dt>Tier</dt><dd><span class="tier tB">B</span></dd></div>
+                <div><dt>Business-loan cap used</dt><dd>42%</dd></div>
+                <div><dt>CRE granted YTD</dt><dd>$18.6M</dd></div>
+                <div><dt>CRE loan rate</dt><dd>7.15%</dd></div>
+              </dl>
+              <p>Credit unions report what banks do not: the dollars of commercial real estate loans actually granted this year and the rate charged. This one is using less than half of its statutory business-loan cap, so a mid-sized deal fits.</p>
+            </div>
+          </div>
+        </li>
+        <li class="place" id="place-3" data-pin="3">
+          <span class="list-number" aria-hidden="true">3</span>
+          <div class="card">
+            <div class="card-body">
+              <span class="kicker">Branch in the county</span>
+              <h2 class="card-title t-product">The Regional Bank Branch</h2>
+              <p class="meta">Bank · Headquartered 90 miles away · 1 branch here</p>
+              <dl class="place-figures">
+                <div><dt>Tier</dt><dd><span class="tier tC">C</span></dd></div>
+                <div><dt>Inv. CRE / capital</dt><dd>410%</dd></div>
+                <div><dt>Loan to deposit</dt><dd>97.10%</dd></div>
+                <div><dt>CRE growth, 4Q</dt><dd><span class="down"><span aria-hidden="true">▼</span> −0.6%</span></dd></div>
+              </dl>
+              <p>Plenty of commercial real estate already, perhaps too much: above 400% of capital, lending growth has historically slowed, and the book shrank slightly last year. The score carries a penalty for it.</p>
+            </div>
+          </div>
+        </li>
+        <li class="place" id="place-4" data-pin="4">
+          <span class="list-number" aria-hidden="true">4</span>
+          <div class="card">
+            <div class="card-body">
+              <span class="kicker">Branch in the county</span>
+              <h2 class="card-title t-product">The Savings Bank</h2>
+              <p class="meta">Thrift · Headquartered in the next county · 2 branches here</p>
+              <dl class="place-figures">
+                <div><dt>Tier</dt><dd><span class="tier tD">D</span></dd></div>
+                <div><dt>CRE share of loans</dt><dd>9.80%</dd></div>
+                <div><dt>Funding cost</dt><dd>3.42%</dd></div>
+                <div><dt>Deposit growth, 4Q</dt><dd><span class="down"><span aria-hidden="true">▼</span> −3.1%</span></dd></div>
+              </dl>
+              <p>Mostly home loans, losing deposits, and paying up for the ones it keeps. A thrift like this can still make a small owner-occupied loan, but commercial real estate is not its business today.</p>
+            </div>
+          </div>
+        </li>
+        <li class="place" id="place-5" data-pin="5">
+          <span class="list-number" aria-hidden="true">5</span>
+          <div class="card">
+            <div class="card-body">
+              <span class="kicker">Branch in the county</span>
+              <h2 class="card-title t-product">The National Bank Branch</h2>
+              <p class="meta">Bank · Headquartered out of state · 3 branches here</p>
+              <dl class="place-figures">
+                <div><dt>Tier</dt><dd><span class="tier tE">E</span></dd></div>
+                <div><dt>CRE share of loans</dt><dd>6.20%</dd></div>
+                <div><dt>CRE lent YTD</dt><dd>($370M)</dd></div>
+                <div><dt>CRE growth, 4Q</dt><dd><span class="down"><span aria-hidden="true">▼</span> −1.8%</span></dd></div>
+              </dl>
+              <p>Big, but shrinking its commercial real estate book: net balances are down $370M this year. The local branch may refer you on. Out-of-state lenders appear only when they have a branch nearby.</p>
+            </div>
+          </div>
+        </li>
+      </ol>
+
+      <div class="divider" aria-hidden="true"></div>
+      <h2>What to do with this</h2>
+      <p>Call the tier A and B lenders in your county first; they are the ones whose filings show them making these loans now. Then work outward to the branches. The score cannot promise a yes, but it does tell you where your first five calls should go.</p>
+      <p><a href="./">Search your property's address</a> to see the real lenders near it.</p>
+    </div>
+
+    <aside class="article-map" aria-label="Map of the five lenders">
+      <figure class="sticky-map">
+        <div class="map-canvas">
+          <svg viewBox="0 0 400 440" aria-hidden="true">
+            <path class="county" d="M40 30h300l20 120-24 60 30 170H52l-18-130 22-90z"/>
+            <path class="river" d="M20 300c60-20 90 10 140-10s70-70 130-60 80 30 100 10"/>
+            <path class="road" d="M200 20v410M40 230h330"/>
+            <path class="road minor" d="M110 60l60 110M300 80l-70 110M120 400l60-130M300 390l-60-120"/>
+            <path class="blocks" d="M170 200h60v60h-60zM185 200v60M200 200v60M215 200v60M170 215h60M170 230h60M170 245h60"/>
+          </svg>
+          <button type="button" class="pin" data-go="1" style="left: 46%; top: 50%" aria-label="1. The County-Seat Bank">1</button>
+          <button type="button" class="pin" data-go="2" style="left: 62%; top: 44%" aria-label="2. The Community Credit Union">2</button>
+          <button type="button" class="pin" data-go="3" style="left: 30%; top: 26%" aria-label="3. The Regional Bank Branch">3</button>
+          <button type="button" class="pin" data-go="4" style="left: 72%; top: 74%" aria-label="4. The Savings Bank">4</button>
+          <button type="button" class="pin" data-go="5" style="left: 36%; top: 82%" aria-label="5. The National Bank Branch">5</button>
+        </div>
+        <figcaption>Illustrative map, not to scale. Pins match the numbered lenders.</figcaption>
+      </figure>
+    </aside>
+  </div>
+</article>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+<script>
+'use strict';
+// the pin for the lender being read is shown selected; clicking a pin jumps to its lender
+const pins = [...document.querySelectorAll('.map-canvas .pin')];
+const select = n => pins.forEach(p => p.classList.toggle('selected', p.dataset.go === n));
+pins.forEach(p => p.addEventListener('click', () => { const t = document.getElementById('place-' + p.dataset.go); t.scrollIntoView({ block: 'center' }); t.querySelector('h2').setAttribute('tabindex', '-1'); t.querySelector('h2').focus({ preventScroll: true }); select(p.dataset.go); }));
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) select(e.target.dataset.pin); }), { rootMargin: '-45% 0px -45% 0px' });
+document.querySelectorAll('.place').forEach(el => io.observe(el));
+select('1');
+</script>
+<script src="site.js"></script>
+</body>
+</html>

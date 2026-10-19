@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · LenderMapper</title>
+<meta name="description" content="How LenderMapper ranks banks and credit unions by their likelihood of lending on commercial real estate, where the data comes from, and definitions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body class="page-about">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html">Lender lookup</a>
+      <a class="t-nav" href="about.html" aria-current="page">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html">Lender lookup</a><a href="about.html" aria-current="page">About</a></nav>
+</div>
+
+<main id="main">
+<article class="container read">
+  <header class="read-head">
+    <span class="kicker">About</span>
+    <h1>Public filings, read for commercial real estate borrowers</h1>
+    <p class="lede">LenderMapper is a free tool for commercial real estate borrowers. Enter a property address and it lists the banks and credit unions nearby, ranked by how likely they are to lend on commercial real estate, using only the call reports every insured lender files each quarter.</p>
+    <p class="meta" id="data-asof">Call reports through the latest published quarter.</p>
+  </header>
+
+  <section class="read-section" aria-labelledby="ab-what">
+    <div class="section-head"><h2 id="ab-what">What it shows</h2></div>
+    <p>Two lists for every address. The first holds lenders whose main office is in the property's county. The second holds lenders based elsewhere in the same state with a branch in the county, or within a distance you choose. Each list is ordered by a likelihood-to-lend score, and every lender gets a tier from A to E.</p>
+    <p>The tiers sort lenders; they are not approval odds. The model behind the score cannot say how much a given lender will lend, but it reliably separates lenders that grow their commercial real estate books from those that do not.</p>
+    <div class="note" role="note"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg><p>Nothing here is a recommendation, an offer of credit, or a statement by any lender. Sponsored placements are always labelled and never change a score, tier or position in the lists.</p></div>
+  </section>
+
+  <section class="read-section" aria-labelledby="ab-score">
+    <div class="section-head"><h2 id="ab-score">How the score works</h2></div>
+    <p>Six parts, each a national percentile from 0 to 100, weighted 25/25/15/15/10/10 by default: CRE momentum, CRE franchise, deposit growth, asset quality, capital and margin. Penalties apply where lending historically slowed: banks above 400% of capital in investment real estate, construction above 150%, and credit unions near their business-loan cap.</p>
+    <p>The weights come from a test on 381,507 lender-quarters from 2016 to 2026. Trained through 2022 and tested on 2023 to 2025, the ranking had a rank correlation of 0.37 for banks and 0.33 for credit unions with the next year's CRE growth. The top tenth of banks grew CRE by 4.28 points of assets; the bottom tenth by 0.09.</p>
+  </section>
+
+  <section class="read-section" aria-labelledby="ab-src">
+    <div class="section-head"><h2 id="ab-src">Where the data comes from</h2></div>
+    <ul class="read-list">
+      <li><b>FDIC BankFind Suite:</b> bank institutions, branch locations, quarterly call-report financials and the annual Summary of Deposits.</li>
+      <li><b>NCUA:</b> Form 5300 call-report data and credit-union branch files.</li>
+      <li><b>FRED:</b> fed funds, SOFR, Treasury yields and the Senior Loan Officer Survey, used in the research behind the weights.</li>
+      <li><b>U.S. Census Bureau geocoder:</b> credit-union office coordinates.</li>
+      <li><b>OpenStreetMap, Photon and OpenFreeMap:</b> address lookup and map tiles.</li>
+    </ul>
+    <p>Figures are as reported by each institution, with no adjustments. Bank and credit-union definitions sometimes differ; each difference is footnoted in the definitions below.</p>
+  </section>
+
+  <section class="read-section" aria-labelledby="ab-refresh">
+    <div class="section-head"><h2 id="ab-refresh">How often it updates</h2></div>
+    <p>Call reports are published roughly 60 days after each quarter ends; branch deposits once a year, for June 30, published in late September. The site rebuilds on the 1st and 15th of each month and picks up new quarters automatically.</p>
+  </section>
+
+  <div class="divider" aria-hidden="true"></div>
+
+  <section class="read-section" id="definitions" aria-labelledby="ab-defs">
+    <div class="section-head"><h2 id="ab-defs">Definitions</h2></div>
+    <div id="defs"><p class="meta">Loading definitions…</p></div>
+  </section>
+</article>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+<script src="core.js"></script>
+<script>
+'use strict';
+$('defs').innerHTML = defsHtml();
+fetch(CFG.data + 'meta.json').then(r => r.ok ? r.json() : null).then(m => { if (m) $('data-asof').textContent = `Call reports through ${m.latest}; ${m.n_banks.toLocaleString('en-US')} banks and ${m.n_cus.toLocaleString('en-US')} credit unions. Built ${m.built}.`; }).catch(() => {});
+</script>
+<script src="site.js"></script>
+</body>
+</html>

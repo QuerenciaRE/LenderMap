@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style guide · LenderMapper</title>
+<meta name="description" content="LenderMapper design system: color, type, spacing, components and devices.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="styles/tokens.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/components.css">
+<link rel="stylesheet" href="styles/devices.css">
+<link rel="stylesheet" href="styles/imagery.css">
+<link rel="stylesheet" href="styles/pages.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body class="page-styleguide">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container-data header-inner">
+    <a class="logo" href="./">LenderMapper</a>
+    <nav class="site-nav" aria-label="Main">
+      <a class="t-nav" href="./">Map search</a>
+      <a class="t-nav" href="lookup.html">Lender lookup</a>
+      <a class="t-nav" href="about.html">About</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-button bare desktop-only" href="lookup.html" aria-label="Find a lender by name"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <a class="button button-primary button-sm desktop-only" href="./#search" data-search>Search</a>
+      <a class="icon-button bare phone-only" href="./#search" data-search aria-label="Search by property address"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg></a>
+      <button type="button" class="icon-button bare phone-only" data-menu-open aria-expanded="false" aria-controls="menu" aria-label="Menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+<div class="menu-panel" id="menu" role="dialog" aria-modal="true" aria-label="Menu" hidden>
+  <div class="container-data header-inner"><a class="logo" href="./">LenderMapper</a><button type="button" class="icon-button bare" data-menu-close aria-label="Close menu"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
+  <nav aria-label="Main"><a href="./">Map search</a><a href="lookup.html">Lender lookup</a><a href="about.html">About</a></nav>
+</div>
+
+<main id="main">
+<div class="container sg">
+  <header class="read-head">
+    <span class="kicker">Design system</span>
+    <h1>LenderMapper style guide</h1>
+    <p class="lede">Olive and terracotta, Heritage type, Comfortable spacing, Stamped components, Press devices and Film imagery. Every value on this page comes from <code>styles/tokens.css</code>.</p>
+  </header>
+
+  <section class="sg-section" aria-labelledby="sg-color">
+    <div class="section-head"><h2 id="sg-color">Color</h2></div>
+    <div class="swatches" id="swatches"></div>
+    <p class="small">Small text needs 4.5:1, large text, icons and chart marks 3:1. Small text in the accent hue uses accent-text. On-accent passes only at 24px or bold 18.66px and up.</p>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-type">
+    <div class="section-head"><h2 id="sg-type">Type</h2></div>
+    <dl class="type-roles">
+      <div><dt class="t-label muted">Display · Libre Caslon Condensed 600</dt><dd class="t-display">Find your lender</dd></div>
+      <div><dt class="t-label muted">Headline · Libre Caslon Condensed 600</dt><dd class="t-headline">Headquartered in the county</dd></div>
+      <div><dt class="t-label muted">Card title · headline face, 22px</dt><dd class="card-title">See local lenders first</dd></div>
+      <div><dt class="t-label muted">Label · Barlow Semi Condensed 600, uppercase</dt><dd class="t-label">CRE lending capacity</dd></div>
+      <div><dt class="t-label muted">Nav · Barlow Semi Condensed 600, uppercase</dt><dd class="t-nav">Map search</dd></div>
+      <div><dt class="t-label muted">Product · item names, title case</dt><dd class="t-product">Courthouse Square Bank</dd></div>
+      <div><dt class="t-label muted">Body · Outfit 400</dt><dd class="t-body">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate.</dd></div>
+      <div><dt class="t-label muted">Numbers · Outfit, tabular in tables</dt><dd class="t-numbers figures">1,204.5 · (370.0) · 88.40%</dd></div>
+      <div><dt class="t-label muted">Small · help, captions, meta lines</dt><dd class="small">HQ Springfield, IL · 6 branches · data 26Q2</dd></div>
+      <div><dt class="t-label muted">Logo</dt><dd><span class="logo">LenderMapper</span></dd></div>
+    </dl>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-space">
+    <div class="section-head"><h2 id="sg-space">Spacing</h2></div>
+    <ul class="space-scale" id="space-scale"></ul>
+    <p class="small">Layout: container 1200px, data container 1440px, gutter 32px (20px on phone), gap 24px, section 96px (64px on phone), block 32px, stack 12px, card padding 24px. Grid: 12 columns from 900px, 8 from 600px, 4 on phone.</p>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-btn">
+    <div class="section-head"><h2 id="sg-btn">Buttons</h2></div>
+    <table class="sg-states">
+      <thead><tr><th scope="col"><span class="vh">Variant</span></th><th scope="col">Default</th><th scope="col">Hover</th><th scope="col">Focus</th><th scope="col">Disabled</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Primary</th><td><button type="button" class="button button-primary">Search</button></td><td><button type="button" class="button button-primary is-hover">Search</button></td><td><button type="button" class="button button-primary is-focus">Search</button></td><td><button type="button" class="button button-primary" disabled>Search</button></td></tr>
+        <tr><th scope="row">Secondary</th><td><button type="button" class="button button-secondary">Filters</button></td><td><button type="button" class="button button-secondary is-hover">Filters</button></td><td><button type="button" class="button button-secondary is-focus">Filters</button></td><td><button type="button" class="button button-secondary" disabled>Filters</button></td></tr>
+        <tr><th scope="row">Text</th><td><button type="button" class="button button-text">Reset all</button></td><td><button type="button" class="button button-text is-hover">Reset all</button></td><td><button type="button" class="button button-text is-focus">Reset all</button></td><td><button type="button" class="button button-text" disabled>Reset all</button></td></tr>
+        <tr><th scope="row">Icon</th><td><button type="button" class="icon-button" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></td><td><button type="button" class="icon-button is-hover" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></td><td><button type="button" class="icon-button is-focus" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></td><td><button type="button" class="icon-button" disabled aria-label="Close"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></td></tr>
+      </tbody>
+    </table>
+    <div class="sg-row"><button type="button" class="button button-primary button-sm">Small</button><button type="button" class="button button-primary">Medium</button><button type="button" class="button button-primary button-lg">Large</button><button type="button" class="button button-secondary"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-download"/></svg>With icon</button></div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-fields">
+    <div class="section-head"><h2 id="sg-fields">Fields</h2></div>
+    <div class="sg-fields">
+      <div class="field"><label class="field-label" for="sg-f1">Default</label><input class="input" id="sg-f1" placeholder="Street, city and state"><p class="field-help">Help text sits below in the small size.</p></div>
+      <div class="field"><label class="field-label" for="sg-f2">Hover</label><input class="input is-hover" id="sg-f2" value="233 S Wacker Dr"></div>
+      <div class="field"><label class="field-label" for="sg-f3">Focus</label><input class="input is-focus" id="sg-f3" value="233 S Wacker Dr"></div>
+      <div class="field"><label class="field-label" for="sg-f4">Disabled</label><input class="input" id="sg-f4" value="Loading…" disabled></div>
+      <div class="field has-error"><label class="field-label" for="sg-f5">Error</label><input class="input" id="sg-f5" value="name@" aria-invalid="true" aria-describedby="sg-f5e"><p class="field-error" id="sg-f5e"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-circle-alert"/></svg>Enter a full email address, like name@bank.com.</p></div>
+      <div class="field"><label class="field-label" for="sg-f6">Search</label><span class="input-wrap lead"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-search"/></svg><input class="input" id="sg-f6" placeholder="Lender name"></span></div>
+      <div class="field"><label class="field-label" for="sg-f7">Select</label><span class="input-wrap trail"><select class="input" id="sg-f7"><option>Investment property</option><option>Owner-occupied</option></select><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-chevron-down"/></svg></span></div>
+      <div class="field sg-wide"><label class="field-label" for="sg-f8">Textarea</label><textarea class="input" id="sg-f8" placeholder="What they said, next step"></textarea></div>
+    </div>
+    <div class="sg-checks">
+      <fieldset><legend class="field-label">Checkbox</legend>
+        <label class="check-row"><input type="checkbox" class="checkbox"><span>Default</span></label>
+        <label class="check-row"><input type="checkbox" class="checkbox" checked><span>Checked</span></label>
+        <label class="check-row"><input type="checkbox" class="checkbox is-focus"><span>Focus</span></label>
+        <label class="check-row"><input type="checkbox" class="checkbox" disabled><span>Disabled</span></label>
+      </fieldset>
+      <fieldset><legend class="field-label">Radio</legend>
+        <label class="check-row"><input type="radio" class="radio" name="sg-r"><span>Default</span></label>
+        <label class="check-row"><input type="radio" class="radio" name="sg-r" checked><span>Selected</span></label>
+        <label class="check-row"><input type="radio" class="radio is-focus" name="sg-r"><span>Focus</span></label>
+        <label class="check-row"><input type="radio" class="radio" name="sg-r2" disabled><span>Disabled</span></label>
+      </fieldset>
+      <fieldset><legend class="field-label">Toggle</legend>
+        <div class="toggle-row"><span id="sg-t1">Off</span><button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="sg-t1"><span class="toggle-knob"></span></button></div>
+        <div class="toggle-row"><span id="sg-t2">On</span><button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sg-t2"><span class="toggle-knob"></span></button></div>
+        <div class="toggle-row"><span id="sg-t3">Focus</span><button type="button" class="toggle is-focus" role="switch" aria-checked="true" aria-labelledby="sg-t3"><span class="toggle-knob"></span></button></div>
+        <div class="toggle-row"><span id="sg-t4">Disabled</span><button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="sg-t4" disabled><span class="toggle-knob"></span></button></div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-cards">
+    <div class="section-head"><h2 id="sg-cards">Cards</h2></div>
+    <ul class="card-grid">
+      <li><div class="card"><div class="card-image illustration-panel"><svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M20 34 60 12l40 22z"/><path d="M24 40h72M30 46v30M48 46v30M72 46v30M90 46v30"/><path d="M18 82h84M12 90h96"/></svg></div><div class="card-body"><span class="kicker">Default</span><span class="card-title">Check one lender</span><p>A short description in body text.</p><p class="meta">Meta line</p></div></div></li>
+      <li><a class="card is-hover" href="#sg-cards"><div class="card-image photo image-missing" role="img" aria-label="Missing-image pattern"></div><div class="card-body"><span class="kicker">Link, hover</span><span class="card-title">The title underlines</span><p>A card that is a link underlines its title on hover.</p><p class="meta">Missing image shown as the pattern</p></div></a></li>
+      <li><a class="card is-focus" href="#sg-cards"><div class="card-image illustration-panel"><svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><circle cx="60" cy="48" r="40"/><circle cx="60" cy="48" r="22" stroke-dasharray="4 6"/><path d="M60 40v16M52 48h16"/></svg></div><div class="card-body"><span class="kicker">Link, focus</span><span class="card-title">Focus ring outside</span><p>Keyboard focus shows the brand ring.</p><p class="meta">Meta line</p></div></a></li>
+    </ul>
+    <div class="sg-stats">
+      <div class="stat"><span class="stat-label">Stat card</span><span class="stat-value">$412.6M</span><span class="small">Large single figures use proportional figures</span></div>
+    </div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-tags">
+    <div class="section-head"><h2 id="sg-tags">Tags, chips and tabs</h2></div>
+    <div class="sg-row"><span class="tag">Bank</span><span class="tag">Credit union</span><span class="tag">Sponsored</span><span class="tag status positive">Growing</span><span class="tag status negative">Shrinking</span><span class="tag status info">New quarter</span></div>
+    <div class="sg-row"><span class="tier tA">Tier A</span><span class="tier tB">Tier B</span><span class="tier tC">Tier C</span><span class="tier tD">Tier D</span><span class="tier tE">Tier E</span></div>
+    <div class="sg-row">
+      <button type="button" class="chip" aria-pressed="false">Default</button>
+      <button type="button" class="chip is-hover" aria-pressed="false">Hover</button>
+      <button type="button" class="chip is-focus" aria-pressed="false">Focus</button>
+      <button type="button" class="chip" aria-pressed="true">Selected<svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+      <button type="button" class="chip" disabled aria-pressed="false">Disabled</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Example tabs">
+      <button type="button" class="tab" role="tab" aria-selected="true">Selected</button>
+      <button type="button" class="tab is-hover" role="tab" aria-selected="false" tabindex="-1">Hover</button>
+      <button type="button" class="tab is-focus" role="tab" aria-selected="false" tabindex="-1">Focus</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-notes">
+    <div class="section-head"><h2 id="sg-notes">Notes</h2></div>
+    <div class="sg-notes">
+      <div class="note" role="note"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-info"/></svg><p><b>Info</b>Credit unions report CRE loans granted; banks do not.</p></div>
+      <div class="note success" role="status"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-circle-check"/></svg><p><b>Success</b>New call reports loaded: data through 26Q2.</p></div>
+      <div class="note error" role="alert"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-circle-alert"/></svg><p><b>Error</b>Address not found. Try adding the city, state and ZIP code.</p></div>
+    </div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-table">
+    <div class="section-head"><h2 id="sg-table">Tables</h2></div>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Example table">
+      <table class="table">
+        <caption class="vh">Example read-only table</caption>
+        <thead><tr><th scope="col">Lender</th><th scope="col">Type</th><th scope="col" class="n">Assets $M</th><th scope="col" class="n">CRE lent YTD $M</th><th scope="col" class="n">CRE growth, 4Q</th></tr></thead>
+        <tbody>
+          <tr><td class="t-product">Courthouse Square Bank</td><td>Bank</td><td class="n">1,204.5</td><td class="n">38.2</td><td class="n"><span class="up"><span aria-hidden="true">▲</span> +2.4%</span></td></tr>
+          <tr><td class="t-product">Prairie Line Credit Union</td><td>Credit union</td><td class="n">642.0</td><td class="n">11.9</td><td class="n"><span class="up"><span aria-hidden="true">▲</span> +1.9%</span></td></tr>
+          <tr><td class="t-product">Union Depot National Bank</td><td>Bank</td><td class="n">88,310.7</td><td class="n">(370.0)</td><td class="n"><span class="down"><span aria-hidden="true">▼</span> −1.8%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">Sample data. Rows are 36px read-only, 44px with checkboxes or actions; numbers right-aligned in tabular figures; negatives in brackets; changes carry a triangle and a sign as well as color.</p>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-pins">
+    <div class="section-head"><h2 id="sg-pins">Map pins and icons</h2></div>
+    <div class="sg-row"><span class="pin">1</span><span class="pin">12</span><span class="pin pin-br">3</span><span class="pin selected">4</span><span class="small">Default (HQ in the county), branch of a lender based elsewhere, selected</span></div>
+    <div class="sg-row sg-icons" id="sg-icons"></div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-devices">
+    <div class="section-head"><h2 id="sg-devices">Graphic devices</h2></div>
+    <p class="small">Section rule (above each heading), boxed kicker, star divider, round stamp, offset frame, halftone band, big list numbers. None on tool screens, forms, tables, charts or maps, apart from section rules and kickers.</p>
+    <div class="sg-row"><span class="kicker">Boxed kicker</span><span class="list-number" aria-hidden="true">3</span></div>
+    <div class="divider" aria-hidden="true"></div>
+    <div class="sg-devices">
+      <div><figure class="frame">
+        <div class="photo feature-image image-missing" role="img" aria-label="Missing-image pattern in an offset frame"></div>
+        <span class="badge" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><path id="sg-stamp-path" d="M60 60m-47 0a47 47 0 1 1 94 0a47 47 0 1 1-94 0"/></defs><circle class="stamp-disc" cx="60" cy="60" r="58"/><circle class="stamp-ring" cx="60" cy="60" r="40"/><text class="stamp-text"><textPath href="#sg-stamp-path" textLength="295" lengthAdjust="spacingAndGlyphs">LENDERMAPPER • A QUERENCIA TOOL •</textPath></text><text class="stamp-mark" x="60" y="57" text-anchor="middle" font-size="17">EST.</text><text class="stamp-mark" x="60" y="80" text-anchor="middle" font-size="22">2026</text></svg></span>
+      </figure>
+      <p class="caption">Offset frame with the stamp: LenderMapper, a Querencia tool, est. 2026.</p></div>
+      <div class="band sg-band"><span class="kicker">On a band</span><p class="card-title">Halftone band on the surface color</p><p class="small">Muted text turns ink on a band.</p></div>
+    </div>
+  </section>
+
+  <section class="sg-section" aria-labelledby="sg-img">
+    <div class="section-head"><h2 id="sg-img">Imagery</h2></div>
+    <p class="small">Film treatment on every photo (warm, slight grain), classic proportions: hero and card 4:3, feature 3:2, banner 2:1. Line illustrations: no fills, 2px ink strokes, 120px wide.</p>
+    <div class="sg-ratios">
+      <figure><div class="photo hero-image image-missing" role="img" aria-label="4 by 3 missing-image block"></div><figcaption>Hero, card 4:3</figcaption></figure>
+      <figure><div class="photo feature-image image-missing" role="img" aria-label="3 by 2 missing-image block"></div><figcaption>Feature 3:2</figcaption></figure>
+      <figure><div class="photo banner-image image-missing" role="img" aria-label="2 by 1 missing-image block"></div><figcaption>Banner 2:1</figcaption></figure>
+    </div>
+    <div class="sg-row sg-illos">
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M8 72h104M8 88h104M30 62v32M90 62v32"/><path d="M60 66C48 52 42 42 42 34a18 18 0 0 1 36 0c0 8-6 18-18 32z"/><circle cx="60" cy="34" r="6"/></svg>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M20 34 60 12l40 22z"/><path d="M24 40h72M30 46v30M48 46v30M72 46v30M90 46v30"/><path d="M18 82h84M12 90h96"/></svg>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M30 80V46l30-24 30 24v34z"/><path d="M52 80V60h16v20"/><path d="M14 80h92"/></svg>
+      <svg class="illustration" viewBox="0 0 120 96" aria-hidden="true"><path d="M14 86h92"/><path d="M24 86V62h14v24M53 86V46h14v40M82 86V30h14v56"/><path d="M22 40l26-16 18 8 32-20"/></svg>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><a class="logo" href="./">LenderMapper</a><p class="small">Banks and credit unions near a property, ranked by how likely they are to lend on commercial real estate. Built only from public FDIC and NCUA filings. Nothing here is an offer of credit or a statement by any lender.</p></div>
+    <nav aria-label="Tools"><span class="t-label">Tools</span><a href="./">Map search</a><a href="lookup.html">Lender lookup</a></nav>
+    <nav aria-label="Information"><span class="t-label">Information</span><a href="about.html">About and sources</a><a href="about.html#definitions">Definitions</a></nav>
+  </div>
+  <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
+</footer>
+<script>
+'use strict';
+// colors and spacing are read from the live tokens so this page can never drift from tokens.css
+const css = getComputedStyle(document.documentElement), v = n => css.getPropertyValue(n).trim();
+const COLORS = ['--brand', '--accent', '--accent-text', '--ground', '--surface', '--paper', '--ink', '--muted', '--line', '--on-brand', '--on-accent', '--data-1', '--data-2', '--data-3', '--data-4', '--positive', '--negative', '--pin-fill', '--rule-color', '--kicker-on-band'];
+const hex = c => { const m = c.match(/^#([0-9a-f]{6})$/i); return m ? c.toUpperCase() : c; };
+document.getElementById('swatches').innerHTML = COLORS.map(n => `<figure class="swatch"><span class="swatch-chip" style="background: var(${n})"></span><figcaption><code>${n.slice(2)}</code><span class="small figures">${hex(v(n))}</span></figcaption></figure>`).join('');
+document.getElementById('space-scale').innerHTML = Array.from({ length: 11 }, (_, i) => `--space-${i + 1}`).map(n => `<li><code>${n.slice(2)}</code><span class="space-bar" style="width: var(${n})"></span><span class="small figures">${v(n)}</span></li>`).join('');
+document.getElementById('sg-icons').innerHTML = ['search', 'menu', 'x', 'check', 'chevron-down', 'chevron-left', 'chevron-right', 'info', 'circle-check', 'circle-alert', 'map-pin', 'map', 'list', 'download', 'sliders', 'landmark', 'pencil', 'external', 'bookmark', 'bell', 'settings']
+  .map(n => `<span class="sg-icon" title="${n}"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-${n}"/></svg><span class="small">${n}</span></span>`).join('');
+document.querySelectorAll('.toggle:not([disabled])').forEach(t => t.addEventListener('click', () => t.setAttribute('aria-checked', String(t.getAttribute('aria-checked') !== 'true'))));
+</script>
+<script src="site.js"></script>
+</body>
+</html>
