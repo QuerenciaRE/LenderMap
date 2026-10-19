@@ -8,7 +8,7 @@ function showSuggest() {
   const q = inp.value;
   if (!q.trim() || !S.lenders.length) { setExpanded(false); return; }
   LK.hits = findLenders(q, 8); LK.sel = -1;
-  box.innerHTML = LK.hits.length ? LK.hits.map((l, i) => `<li role="option" id="opt-${i}" aria-selected="false" data-id="${l.id}"><span class="t-product">${esc(nm(l))}</span>${typeTag(l)}${tierTag(l)}<span class="small">${esc(l.ci)}, ${l.st} · ${money(l.ast, 0)} assets · ${l.nb} offices</span></li>`).join('')
+  box.innerHTML = LK.hits.length ? LK.hits.map((l, i) => `<li role="option" id="opt-${i}" aria-selected="false" data-id="${l.id}"><span class="t-product">${esc(nm(l))}</span>${typeTag(l)}${gradeTag(l)}<span class="small">${esc(l.ci)}, ${l.st} · ${money(l.ast, 0)} assets · ${l.nb} offices</span></li>`).join('')
     : '<li class="none" role="option" aria-disabled="true">No lender matches that name.</li>';
   setExpanded(true);
 }
@@ -23,7 +23,7 @@ function showResults(q) {
   const hits = findLenders(q, 50);
   $('lk-res-h').textContent = `Matches for “${q}”`;
   $('lk-count').textContent = hits.length ? `${hits.length === 50 ? 'First 50' : hits.length} lender${hits.length === 1 ? '' : 's'}, largest first within each match type.` : 'No lender matches that name. Try fewer words, or the initials.';
-  $('lk-rows').innerHTML = hits.map(l => `<tr><td><button type="button" class="row-link" data-id="${l.id}">${esc(nm(l))}</button></td><td>${typeText(l)}</td><td>${esc(l.ci)}, ${l.st}</td><td class="n">${fmtM(l.ast, 0)}</td><td class="n">${fmtI(l.nb)}</td><td>${tierTag(l)}</td></tr>`).join('');
+  $('lk-rows').innerHTML = hits.map(l => `<tr><td><button type="button" class="row-link" data-id="${l.id}">${esc(nm(l))}</button></td><td>${typeText(l)}</td><td>${esc(l.ci)}, ${l.st}</td><td class="n">${fmtM(l.ast, 0)}</td><td class="n">${fmtI(l.nb)}</td><td>${gradeTag(l)} <span class="na">${l.total}/16</span></td></tr>`).join('');
   $('lk-results').hidden = false;
 }
 

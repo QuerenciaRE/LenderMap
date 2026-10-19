@@ -1,18 +1,21 @@
 /* LenderMapper tool screens: Map search (index.html) and Lender lookup (lookup.html).
    Tool screens use the package without graphic devices; only section rules and kickers carry over. */
-:root { --chipbar: calc(var(--chip-height) + 2 * var(--space-3) + 2px); }
+:root { --chipbar: calc(var(--field-height) + 2 * var(--space-3) + 2px); }
 
-/* ---- tiers A-E: national quintiles of the score ---- */
-.tier {
+/* ---- grades: A+ (all 16 points), then A-D by national quarter of the score ---- */
+.grade {
   display: inline-flex; align-items: center; justify-content: center; min-width: var(--tag-height); height: var(--tag-height); padding: 0 6px; vertical-align: middle;
   font-family: var(--font-label); font-weight: var(--label-weight); font-size: 12px; letter-spacing: var(--label-tracking); text-transform: var(--label-case); line-height: 1;
   border: 1.5px solid var(--ink); white-space: nowrap;
 }
-.tA { background: var(--positive); color: var(--on-brand); }
-.tB { background: color-mix(in srgb, var(--positive) 14%, var(--paper)); color: var(--positive); }
-.tC { background: var(--paper); color: var(--ink); }
-.tD { background: color-mix(in srgb, var(--negative) 12%, var(--paper)); color: var(--negative); }
-.tE { background: var(--negative); color: var(--paper); }
+.gAp { background: var(--ink); color: var(--paper); }
+.gA { background: var(--positive); color: var(--on-brand); }
+.gB { background: color-mix(in srgb, var(--positive) 14%, var(--paper)); color: var(--positive); }
+.gC { background: var(--paper); color: var(--ink); }
+.gD { background: color-mix(in srgb, var(--negative) 12%, var(--paper)); color: var(--negative); }
+
+/* green box: a headline figure in the top third of the current search */
+.top3 { display: inline-block; padding: 0 6px; margin-left: -8px; border: 2px solid var(--positive); background: color-mix(in srgb, var(--positive) 10%, var(--paper)); }
 
 /* ---- landing (Map search before a search) ---- */
 .search-hero { padding-top: var(--space-8); padding-bottom: var(--space-7); max-width: calc(880px + 2 * var(--gutter)); }
@@ -54,7 +57,10 @@ body.results #results-view { display: block; }
 body.results .footer { margin-top: 0; }
 #chipbar { position: sticky; top: var(--hdr); z-index: 20; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--gutter); background: var(--ground); border-bottom: 2px solid var(--ink); overflow-x: auto; scrollbar-width: none; }
 #chipbar::-webkit-scrollbar { display: none; }
-.chip-sep { flex: none; width: 2px; height: 22px; background: var(--line); margin: 0 var(--space-1); }
+.amt-form { display: flex; align-items: center; gap: var(--space-3); min-width: 0; flex: 1; }
+.amt-form .field-label { white-space: nowrap; }
+.amt-form .input { width: 160px; flex: none; }
+.amt-form .small { margin: 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .split { display: flex; align-items: flex-start; max-width: calc(var(--container-data) + 2 * var(--gutter)); margin: 0 auto; }
 #listpane { width: var(--list-w, 60%); flex: none; min-width: 0; padding: var(--space-5) var(--space-3) var(--space-7) var(--gutter); }
 #mappane, #divider { position: sticky; top: calc(var(--hdr) + var(--chipbar)); height: calc(100vh - var(--hdr) - var(--chipbar)); }
@@ -98,9 +104,10 @@ body.resizing #map { pointer-events: none; }
 .maplibregl-marker.pin:hover { width: var(--pin-size-selected); height: var(--pin-size-selected); background: var(--ink); color: var(--paper); }
 .legend { position: absolute; bottom: var(--space-3); left: var(--space-3); z-index: 5; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); max-width: 300px; padding: var(--space-2) var(--space-3); background: var(--paper); border: 2px solid var(--ink); color: var(--ink); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .lg-prop { width: 12px; height: 16px; overflow: visible; }
 .legend i { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; }
 .legend .lg-hq { background: var(--pin-fill); } .legend .lg-br { background: var(--brand); }
-.legend .lg-dot { width: 8px; height: 8px; border-width: 1px; background: var(--muted); } .legend .lg-pt { background: var(--paper); border-width: 3px; }
+.legend .lg-dot { width: 8px; height: 8px; border-width: 1px; background: var(--muted); }
 
 /* MapLibre popups and controls in the Stamped style */
 .maplibregl-popup-content { position: relative; padding: var(--space-3) var(--space-4); background: var(--paper); border: 2px solid var(--ink); border-radius: 0; box-shadow: var(--shadow-card); font-family: var(--font-numbers); font-size: var(--numbers-size); line-height: 1.45; color: var(--ink); }
@@ -130,17 +137,6 @@ body.resizing #map { pointer-events: none; }
 .lcard.skel span:nth-child(1) { height: 18px; width: 40%; } .lcard.skel span:nth-child(2) { height: 12px; width: 65%; } .lcard.skel span:nth-child(3) { height: 36px; }
 
 /* filters dialog */
-.fm-section { padding: var(--space-4) 0 var(--space-5); border-bottom: 1px solid var(--line); }
-.fm-section:first-child { padding-top: 0; }
-.fm-section:last-child { border-bottom: 0; padding-bottom: 0; }
-.fm-section h3 { margin-bottom: var(--space-3); }
-.fm-h { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.fm-set { border: 0; padding: 0; margin: 0 0 var(--space-4); }
-.fm-set legend { padding: 0; margin-bottom: var(--space-1); }
-.fm-amt .input { max-width: 200px; }
-.w { display: grid; grid-template-columns: 140px 1fr 32px; align-items: center; gap: var(--space-3); min-height: var(--tap-min); }
-.w input { width: 100%; height: var(--tap-min); margin: 0; }
-.w output { text-align: right; font-family: var(--font-numbers); font-weight: var(--numbers-weight-strong); font-variant-numeric: tabular-nums lining-nums; }
 
 /* map / list toggle (below 900px) */
 #maptoggle { display: none; }
@@ -157,6 +153,19 @@ body.resizing #map { pointer-events: none; }
 .ld-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); background: var(--paper); border: 2px solid var(--ink); box-shadow: var(--shadow-card); margin-bottom: var(--space-6); overflow: hidden; }
 .ld-stat { padding: var(--space-3) var(--space-4); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 -1px -1px 0; }
 .ld-stat .stat-value { font-size: var(--card-title-size); }
+.ld-score h3 { margin-bottom: var(--space-2); color: var(--muted); }
+.ld-score .ld-stats { margin-bottom: var(--space-3); }
+.ld-score > .small { margin: 0 0 var(--space-5); max-width: 90ch; }
+.ld-total { background: color-mix(in srgb, var(--brand) 8%, var(--paper)); }
+.ld-total .stat-value { font-size: var(--headline-size); line-height: 1; }
+.ld-total .of { font-size: var(--card-title-size); color: var(--muted); }
+.ld-stats.ld-facts { box-shadow: none; }
+
+/* property pin: terracotta teardrop above every lender pin */
+.prop-pin { width: 36px; height: 48px; z-index: 10; pointer-events: none; filter: drop-shadow(2px 2px 0 var(--ink)); }
+.prop-pin svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.prop-body { fill: var(--property-pin); stroke: var(--ink); stroke-width: 2.5; }
+.prop-hole { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
 .ld-section { margin-bottom: var(--space-6); }
 .ld-section h3 { margin-bottom: var(--space-3); }
 .ld-section .tabs { margin-bottom: 0; }
@@ -208,7 +217,15 @@ dl.defs dd { margin: var(--space-1) 0 0; max-width: 75ch; }
   body.results #maptoggle:active { transform: translate(calc(-50% + 2px), 2px); }
   .lrow-track { grid-auto-columns: minmax(220px, calc((100% - 2 * var(--gap)) / 3)); }
 }
+@media (max-width: 899px) {
+  .amt-form .small { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
 @media (max-width: 599px) {
+  .amt-form { gap: var(--space-2); }
+  .amt-form .input { width: auto; flex: 1; min-width: 0; }
+  .hist :is(th, td) { padding: 0 var(--space-2); }
+  .hist tbody th { white-space: normal; min-width: 112px; max-width: 128px; line-height: 1.25; padding-top: var(--space-1); padding-bottom: var(--space-1); }
+  .table tbody th.sub { padding-left: var(--space-4); }
   .search-hero { padding-top: var(--space-6); }
   #searchbar { padding: var(--space-4); }
   .searchbar-row { flex-direction: column; }

@@ -62,11 +62,11 @@ h3, .card-title {
 table, .num, .figures { font-variant-numeric: tabular-nums lining-nums; }
 .stat-value { font-variant-numeric: proportional-nums lining-nums; }
 
-/* ---- logo: the one place the display face is always in capitals; stamped like a primary button ---- */
+/* ---- logo: stamped like a primary button, in the button face ---- */
 .logo {
-  font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--logo-size); line-height: 1;
-  text-transform: uppercase; letter-spacing: .03em; color: var(--logo-color); text-decoration: none; white-space: nowrap;
-  display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 2px var(--space-3) 0;
+  font-family: var(--font-nav); font-weight: var(--nav-weight); font-size: var(--logo-size); line-height: 1;
+  text-transform: uppercase; letter-spacing: var(--button-tracking); color: var(--logo-color); text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 var(--space-3);
   background: var(--logo-fill); border: var(--border-width) solid var(--ink); box-shadow: var(--shadow-button);
 }
 a.logo:hover { background: color-mix(in srgb, var(--logo-fill) 84%, var(--ink)); }

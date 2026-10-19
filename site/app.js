@@ -3,20 +3,20 @@
 
 /* ---------------- columns (CSV download) ---------------- */
 const COLS = [
-  { k: 'tier', l: 'Tier' }, { k: 'score', l: 'Score' }, { k: 'n', l: 'Lender' }, { k: 'c', l: 'Type' }, { k: 'hq', l: 'HQ' }, { k: 'dist', l: 'HQ mi' }, { k: 'nbr', l: 'Branches near' },
+  { k: 'grade', l: 'Grade' }, { k: 'total', l: 'Points (4-16)' }, { k: 'n', l: 'Lender' }, { k: 'c', l: 'Type' }, { k: 'hq', l: 'HQ' }, { k: 'dist', l: 'HQ mi' }, { k: 'nbr', l: 'Branches near' },
   { k: 'dep', l: 'Deposits $M' }, { k: 'ast', l: 'Assets $M' }, { k: 'ltd', l: 'Loan/Dep' }, { k: 't1', l: 'Tier 1 lev' }, { k: 'nwr', l: 'Net worth' }, { k: 'fc', l: 'Funding cost' }, { k: 'nim', l: 'NIM' },
-  { k: 'crecap', l: 'Inv. CRE / capital', occ: 'inv' }, { k: 'oocap', l: 'OO CRE / capital', occ: 'oo' }, { k: 'inv', l: 'Inv. CRE $M', occ: 'inv' }, { k: 'oo', l: 'OO CRE $M', occ: 'oo' }, { k: 'cre', l: 'Total CRE $M' },
+  { k: 'crecap', l: 'Inv. CRE / capital' }, { k: 'oocap', l: 'OO CRE / capital' }, { k: 'inv', l: 'Inv. CRE $M' }, { k: 'oo', l: 'OO CRE $M' }, { k: 'cre', l: 'Total CRE $M' },
   { k: 'mom', l: 'CRE growth 4Q' }, { k: 'chg', l: 'CRE lent YTD $M' }, { k: 'granted', l: 'CRE granted YTD $M' }, { k: 'avgloan', l: 'Avg loan $M' }, { k: 'brok', l: 'Brokered / non-mbr' },
   { k: 'head', l: 'Cap headroom $M' }, { k: 'mblused', l: 'MBL cap used' }, { k: 'rate', l: 'CRE rate' }, { k: 'yield', l: 'Loan yield' }, { k: 'npl', l: 'NPL' }, { k: 'crenpl', l: 'CRE NPL' },
   { k: 'roa', l: 'ROA' }, { k: 'limit', l: 'Lending limit $M' }, { k: 'nb', l: 'Branches' },
 ];
-function visibleCols() { const occ = occNow(); return COLS.filter(c => !c.occ || c.occ === occ); }
 
 /* ---------------- load ---------------- */
 async function load() {
   await loadData();
   if (CFG.offline) { $('csv').hidden = true; $('addr').placeholder = 'ZIP code, e.g. 60606'; $('addr-result').textContent = 'Preview build: enter a 5-digit ZIP or click the map to drop a pin. The hosted site accepts full street addresses and shows a street basemap.'; }
-  renderPlacements(); updateSummaries();
+  $('asof').textContent = 'Updated ' + quarterLabel(S.meta.latest);
+  renderPlacements();
   const q = new URLSearchParams(location.search).get('q'); if (q) { $('addr').value = q; search(); }
 }
 
@@ -99,7 +99,6 @@ async function run() {
   const where = `${esc(pt.label)}${pt.cname ? ` <span class="muted">(${esc(pt.cname)}, ${pt.st})</span>` : pt.st ? ` <span class="muted">(${pt.st}; county not found)</span>` : ' <span class="muted">(state not resolved)</span>'}`;
   $('addr-result').innerHTML = where; $('where').innerHTML = where;
   const amt = parseFloat(($('amt').value || '').replace(/[^0-9.]/g, '')) || null, amtM = amt ? (amt > 1e5 ? amt / 1e6 : amt) : null; // accept dollars or $M
-  const fBank = $('f-bank').checked, fThrift = $('f-thrift').checked, fCu = $('f-cu').checked, fFom = $('f-fom').checked, fAny = $('f-anycre').checked;
   const { lat, lon } = pt;
   // branches that count as "nearby": in the property's county, or within the mile radius. Closest one kept per lender.
   const near = {};
@@ -111,21 +110,21 @@ async function run() {
   const hq = [], br = [];
   for (const l of S.lenders) {
     if (l.lat == null || !pt.st || l.st !== pt.st) continue;
-    if (l.c === 'B' && !(l.cl === 'Savings institution' ? fThrift : fBank)) continue;
-    if (l.c === 'C' && !fCu) continue;
-    if (l.c === 'C' && !fFom && l.fom && !(l.fom === 'Community' || l.fom.startsWith('State charter'))) continue;
-    if (fAny && !(l.cre > 0)) continue;
-    if (amtM) { if (l.limit != null && l.limit < amtM) continue; if (l.c === 'C' && l.mblrem != null && l.mblrem < amtM) continue; }
+    // fixed rules: credit unions that lend only to one employer or group, and lenders with no CRE on the books, are not listed
+    if (l.c === 'C' && l.fom && !(l.fom === 'Community' || l.fom.startsWith('State charter'))) continue;
+    if (!(l.cre > 0)) continue;
+    // loan amount box (off by default): hide lenders whose legal lending limit or remaining CRE capacity is below the loan
+    if (amtM && ((l.limit != null && l.limit < amtM) || (capOf(l) != null && capOf(l) < amtM))) continue;
     const nb = near[l.id], r = Object.assign({}, l, { dist: hav(lat, lon, l.lat, l.lon), nbr: nb ? nb.n : 0, brdist: nb ? nb.min : null, brpt: nb ? nb.b : null });
     if (pt.ck && l.ck === pt.ck) hq.push(Object.assign(r, { list: 'hq' }));
     else if (nb) br.push(Object.assign(r, { list: 'br' }));
   }
-  const byScore = (a, b) => b.score - a.score;
   hq.sort(byScore); br.sort(byScore);
   S.lists = { hq, br }; S.results = [...hq, ...br]; S.mode = mode; S.rBr = rBr;
+  markTop(S.results);
   renderResults();
   const nB = S.results.filter(r => r.c === 'B').length, nC = S.results.length - nB;
-  $('summary').innerHTML = `<b>${S.results.length}</b> lenders (${nB} banks, ${nC} credit unions)${amtM ? ` · can lend $${amtM.toFixed(1)}M` : ''} · ordered by likelihood of ${occNow() === 'inv' ? 'investment' : 'owner-occupied'} CRE lending`;
+  $('summary').innerHTML = `<b>${S.results.length}</b> lenders (${nB} banks, ${nC} credit unions)${amtM ? ` · can hold a $${amtM.toFixed(1)}M loan` : ''} · ordered by national score. A green box marks the top third of this search.`;
   $('csv').disabled = !S.results.length;
 }
 
@@ -137,7 +136,7 @@ function enterResults() {
   if (S.map) S.map.resize();
 }
 function renderResults() {
-  enterResults(); updateSummaries(); syncChips();
+  enterResults();
   renderSponsorSlot(); renderCards(); renderMap();
 }
 
@@ -145,19 +144,35 @@ function renderResults() {
 // Only the headline metrics are shown; the score orders the lists but is not displayed here (it is in the lender details).
 function capacity(r) {
   if (r.c === 'B') return r.caprem == null ? money(null) : r.caprem <= 0 ? 'None <span class="na">(above 300%)</span>' : money(r.caprem);
-  return r.mblrem == null ? 'No cap' : r.mblrem <= 0 ? 'None <span class="na">(cap reached)</span>' : money(r.mblrem);
+  return r.licu ? 'No cap' : r.mblrem == null ? money(null) : r.mblrem <= 0 ? 'None <span class="na">(cap reached)</span>' : money(r.mblrem);
+}
+// Green box: top third of the current search (both lists) for each headline figure. Tier 1 leverage is compared among the
+// banks in the search; net worth ratio, CRE granted and CRE rate among the credit unions; capacity within each charter.
+// Fewer than 3 to compare: only the best one is marked; a lone lender is not marked.
+const TOP = [['ltd', r => r.ltd, -1, 'all'], ['cap', capOf, 1, 'charter'], ['t1', r => r.t1, 1, 'B'], ['nwr', r => r.nwr, 1, 'C'], ['fc', r => r.fc, -1, 'all'], ['granted', r => r.granted, 1, 'C'], ['rate', r => r.rate, -1, 'C']];
+function markTop(rows) {
+  rows.forEach(r => r.top = {});
+  for (const [k, v, dir, who] of TOP) {
+    const groups = who === 'all' ? [rows] : who === 'charter' ? [rows.filter(r => r.c === 'B'), rows.filter(r => r.c === 'C')] : [rows.filter(r => r.c === who)];
+    for (const g of groups) {
+      const vals = g.map(v).filter(x => x != null && !Number.isNaN(x)).sort((a, b) => (b - a) * dir);
+      if (vals.length < 2) continue;
+      const cutoff = vals[Math.max(1, Math.floor(vals.length / 3)) - 1];
+      g.forEach(r => { const x = v(r); if (x != null && (dir > 0 ? x >= cutoff : x <= cutoff)) r.top[k] = true; });
+    }
+  }
 }
 function cardStats(r) {
   const s = [
-    ['Loan to deposit', fmtP(r.ltd, 1), 'Gross loans / total deposits'],
-    ['CRE lending capacity', capacity(r), r.c === 'B' ? 'Room to grow investment CRE to 300% of capital (regulatory guidance level)' : 'Room left under the business-loan cap (1.75× net worth); low-income credit unions are exempt'],
-    r.c === 'B' ? ['Tier 1 leverage', fmtP(r.t1), 'Tier 1 capital / average assets, as reported'] : ['Net worth ratio', fmtP(r.nwr), 'NCUA net worth ratio'],
-    ['Funding cost', fmtP(r.fc), 'Annualized interest expense / average deposits + borrowings'],
+    ['ltd', 'Loan to deposit', fmtP(r.ltd, 1), 'Gross loans / total deposits'],
+    ['cap', 'CRE lending capacity', capacity(r), r.c === 'B' ? 'Room to grow investment CRE to 300% of capital (regulatory guidance level)' : 'Room left under the business-loan cap (1.75× net worth); low-income credit unions are exempt'],
+    r.c === 'B' ? ['t1', 'Tier 1 leverage', fmtP(r.t1), 'Tier 1 capital / average assets, as reported'] : ['nwr', 'Net worth ratio', fmtP(r.nwr), 'NCUA net worth ratio'],
+    ['fc', 'Funding cost', fmtP(r.fc), 'Annualized interest expense / average deposits + borrowings'],
   ];
   if (r.c === 'C') s.push(
-    ['CRE granted YTD', r.granted == null ? money(null) : money(r.granted) + (r.grantedn != null ? ` <span class="na">(${fmtI(r.grantedn)})</span>` : ''), 'Real-estate-secured commercial loans granted this year: dollars (number of loans)'],
-    ['CRE loan rate', fmtP(r.rate), 'Reported rate on real-estate-secured commercial loans (NCUA account 525)']);
-  return s;
+    ['granted', 'CRE granted YTD', r.granted == null ? money(null) : money(r.granted) + (r.grantedn != null ? ` <span class="na">(${fmtI(r.grantedn)})</span>` : ''), 'Real-estate-secured commercial loans granted this year: dollars (number of loans)'],
+    ['rate', 'CRE loan rate', fmtP(r.rate), 'Reported rate on real-estate-secured commercial loans (NCUA account 525)']);
+  return s.map(([k, l, v, t]) => [l, r.top && r.top[k] ? `<span class="top3">${v}<span class="vh"> (top third of this search)</span></span>` : v, t]);
 }
 function cardHtml(r, i) {
   const where = r.list === 'hq' ? `HQ ${esc(r.ci)}, ${r.st}, ${r.dist.toFixed(1)} mi`
@@ -165,7 +180,7 @@ function cardHtml(r, i) {
   return `<li class="lcard" data-id="${r.id}" tabindex="0" aria-label="${i}. ${esc(nm(r))}. Open details">
     <span class="pin pin-${r.list}" aria-hidden="true">${i}</span>
     <div class="lc-main">
-      <div class="lc-top"><span class="lc-name t-product">${esc(nm(r))}</span>${typeTag(r)}</div>
+      <div class="lc-top"><span class="lc-name t-product">${esc(nm(r))}</span>${typeTag(r)}${gradeTag(r)}</div>
       <p class="lc-meta small">${typeText(r)} · ${where}</p>
       <dl class="lc-stats">${cardStats(r).map(([k, v, t]) => `<div title="${esc(t)}"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
     </div></li>`;
@@ -207,7 +222,7 @@ function showPopup(lngLat, html) {   // MapLibre's own close glyph is replaced b
 // List 1 pins sit on the headquarters; list 2 pins on the lender's closest qualifying branch (its HQ may be across the state).
 const pinAt = r => r.list === 'br' && r.brpt ? [r.brpt[3], r.brpt[2]] : [r.lon, r.lat];
 function markerPopup(r, i) {
-  return `<div class="pp"><span class="t-product">${i}. ${esc(nm(r))}</span><p class="small">${typeText(r)} · HQ ${esc(r.ci)}, ${r.st}</p>
+  return `<div class="pp"><span class="t-product">${i}. ${esc(nm(r))}</span><p class="small">${typeText(r)} · HQ ${esc(r.ci)}, ${r.st} · Grade ${r.grade}, ${r.total} of 16 points</p>
   ${r.list === 'br' && r.brpt ? `<p class="small">Pin: closest branch, ${esc(r.brpt[4])}, ${esc(r.brpt[5])} (${r.brdist.toFixed(1)} mi)</p>` : ''}
   <dl class="pp-stats"><div><dt>Loan/dep</dt><dd>${fmtP(r.ltd, 1)}</dd></div><div><dt>Funding cost</dt><dd>${fmtP(r.fc)}</dd></div></dl>
   <button type="button" class="button button-primary button-sm" data-open="${r.id}">Details</button></div>`;
@@ -230,7 +245,7 @@ function initMap() {
   const style = CFG.offline ? { version: 8, sources: { states: { type: 'geojson', data: CFG.data + 'us-states.json' } }, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': TOK('--surface') } }, { id: 'states', type: 'fill', source: 'states', paint: { 'fill-color': TOK('--ground'), 'fill-outline-color': TOK('--line') } }, { id: 'states-line', type: 'line', source: 'states', paint: { 'line-color': TOK('--muted'), 'line-width': 0.8 } }] } : CFG.tiles;
   S.map = new maplibregl.Map({ container: 'map', style, center: [-96, 38.5], zoom: 3.6, attributionControl: !CFG.offline });
   S.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-  const lg = document.createElement('div'); lg.className = 'legend small'; lg.innerHTML = '<span><i class="lg-hq" aria-hidden="true"></i>HQ in the county</span><span><i class="lg-br" aria-hidden="true"></i>Closest branch, HQ elsewhere</span><span><i class="lg-dot" aria-hidden="true"></i>Nearby branches</span><span><i class="lg-pt" aria-hidden="true"></i>Property</span>'; $('map').appendChild(lg);
+  const lg = document.createElement('div'); lg.className = 'legend small'; lg.innerHTML = '<span><i class="lg-hq" aria-hidden="true"></i>HQ in the county</span><span><i class="lg-br" aria-hidden="true"></i>Closest branch, HQ elsewhere</span><span><i class="lg-dot" aria-hidden="true"></i>Nearby branches</span><span><svg class="lg-prop" viewBox="0 0 36 48" aria-hidden="true"><path class="prop-body" d="M18 46C10 35 3 27 3 18a15 15 0 0 1 30 0c0 9-7 17-15 28z"/><circle class="prop-hole" cx="18" cy="18" r="6"/></svg>Property</span>'; $('map').appendChild(lg);
   S.map.on('load', () => {
     const accent = TOK('--accent'), ink = TOK('--ink');
     S.map.addSource('circle', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -238,8 +253,6 @@ function initMap() {
     S.map.addLayer({ id: 'circle-line', type: 'line', source: 'circle', paint: { 'line-color': TOK('--accent-text'), 'line-width': 2, 'line-dasharray': [2, 2] } });
     S.map.addSource('br', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     S.map.addLayer({ id: 'br', type: 'circle', source: 'br', paint: { 'circle-radius': 4, 'circle-color': ['get', 'color'], 'circle-opacity': 0.85, 'circle-stroke-color': ink, 'circle-stroke-width': 1 } });
-    S.map.addSource('pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    S.map.addLayer({ id: 'pin', type: 'circle', source: 'pin', paint: { 'circle-radius': 8, 'circle-color': TOK('--paper'), 'circle-stroke-color': ink, 'circle-stroke-width': 4 } });
     S.map.on('mouseenter', 'br', () => S.map.getCanvas().style.cursor = 'pointer'); S.map.on('mouseleave', 'br', () => S.map.getCanvas().style.cursor = '');
     S.map.on('click', 'br', e => { const p = e.features[0].properties; showPopup(e.lngLat, branchPopup(p.bid)); });
     S.map.on('click', async e => {
@@ -250,11 +263,13 @@ function initMap() {
     if (S.results.length) renderMap();
   });
 }
+const PROP_PIN = '<svg viewBox="0 0 36 48" aria-hidden="true"><path class="prop-body" d="M18 46C10 35 3 27 3 18a15 15 0 0 1 30 0c0 9-7 17-15 28z"/><circle class="prop-hole" cx="18" cy="18" r="6"/></svg>';
 function circlePoly(lat, lon, mi) { const pts = []; for (let i = 0; i <= 64; i++) { const a = i / 64 * 2 * Math.PI; pts.push([lon + (mi / 69.172 / Math.cos(lat * Math.PI / 180)) * Math.cos(a), lat + (mi / 68.703) * Math.sin(a)]); } return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [pts] } }; }
 function renderMap() {
-  if (!S.map || !S.map.getSource('pin')) return;
+  if (!S.map || !S.map.getSource('br')) return;
   const { lat, lon } = S.pt, ok = S.mode === 'county' ? b => b[6] === S.pt.st && b[11] === S.pt.ck : b => hav(lat, lon, b[2], b[3]) <= S.rBr;
-  S.map.getSource('pin').setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] } }] });
+  if (!S.propPin) { const el = document.createElement('div'); el.className = 'prop-pin'; el.setAttribute('role', 'img'); el.setAttribute('aria-label', 'Property'); el.innerHTML = PROP_PIN; S.propPin = new maplibregl.Marker({ element: el, anchor: 'bottom' }); }
+  S.propPin.setLngLat([lon, lat]).addTo(S.map);   // drawn above the lender pins (z-index in app.css)
   const ring = S.mode === 'miles' ? circlePoly(lat, lon, S.rBr) : null;
   S.map.getSource('circle').setData({ type: 'FeatureCollection', features: ring ? [ring] : [] });
   renderMarkers();
@@ -269,7 +284,7 @@ function renderMap() {
 /* ---------------- branch popup ---------------- */
 function branchPopup(bid) {
   const b = S.brById[bid], l = S.byId[b[1]], st = branchStats(l.id).find(x => x.b[0] === bid);
-  let h = `<div class="pp"><span class="t-product">${esc(b[4])}</span><p class="small">${esc(b[5])}, ${b[6]} ${b[7]}<br>Owner: <button type="button" class="button-text pp-link" data-open="${l.id}">${esc(nm(l))}</button> (${l.c === 'B' ? 'bank' : 'credit union'}, tier ${l.tier})</p>`;
+  let h = `<div class="pp"><span class="t-product">${esc(b[4])}</span><p class="small">${esc(b[5])}, ${b[6]} ${b[7]}<br>Owner: <button type="button" class="button-text pp-link" data-open="${l.id}">${esc(nm(l))}</button> (${l.c === 'B' ? 'bank' : 'credit union'}, grade ${l.grade})</p>`;
   if (l.c === 'C') h += '<p class="small">NCUA publishes no branch-level deposits.</p>';
   else if (st.dep == null) h += '<p class="small">No Summary of Deposits record (opened after June 30 or non-deposit office).</p>';
   else {
@@ -288,8 +303,8 @@ window.openLender = function (id) {
 
 /* ---------------- CSV ---------------- */
 function csv() {
-  const cols = [{ k: 'list', l: 'List' }, ...visibleCols()], rows = S.results;
-  const val = (r, c) => { const v = c.k === 'brok' ? (r.c === 'B' ? r.brok : r.nonmem) : c.k === 'head' ? (r.c === 'B' ? r.caprem : r.mblrem) : c.k === 'mom' ? r.momv : c.k === 'chg' ? r.chgv : c.k === 'hq' ? `${r.ci}, ${r.st}` : c.k === 'c' ? (r.c === 'B' ? 'Bank' : 'CU') : c.k === 'list' ? (r.list === 'hq' ? 'HQ in county' : 'HQ in state, branch nearby') : r[c.k]; return v == null ? '' : typeof v === 'number' ? (Number.isInteger(v) ? v : +v.toFixed(3)) : `"${String(v).replace(/"/g, '""')}"`; };
+  const cols = [{ k: 'list', l: 'List' }, ...COLS], rows = S.results;
+  const val = (r, c) => { const v = c.k === 'brok' ? (r.c === 'B' ? r.brok : r.nonmem) : c.k === 'head' ? (r.c === 'B' ? r.caprem : r.mblrem) : c.k === 'hq' ? `${r.ci}, ${r.st}` : c.k === 'c' ? (r.c === 'B' ? 'Bank' : 'CU') : c.k === 'list' ? (r.list === 'hq' ? 'HQ in county' : 'HQ in state, branch nearby') : r[c.k]; return v == null ? '' : typeof v === 'number' ? (Number.isInteger(v) ? v : +v.toFixed(3)) : `"${String(v).replace(/"/g, '""')}"`; };
   const txt = cols.map(c => `"${c.l}"`).join(',') + '\n' + rows.map(r => cols.map(c => val(r, c)).join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv' })); a.download = `lenders_${(S.pt.label || 'search').replace(/[^a-z0-9]+/gi, '_').slice(0, 60)}.csv`; a.click();
 }
@@ -299,9 +314,6 @@ function showModal(title, html) { $('modal-title').textContent = title; $('modal
 $('btn-defs').onclick = () => showModal('Definitions', defsHtml());
 
 /* ---------------- search panel under the header (results view) ---------------- */
-function updateSummaries() {
-  document.querySelectorAll('input[name=occ-r]').forEach(r => r.checked = r.value === occNow());
-}
 const dropOpen = () => !$('hdr-drop').hidden;
 function openSearchPanel() { $('hdr-drop').hidden = false; document.querySelectorAll('[data-search]').forEach(b => b.setAttribute('aria-expanded', 'true')); $('addr').focus(); $('addr').select(); }
 function closeSearchPanel() { if (!dropOpen()) return; $('hdr-drop').hidden = true; document.querySelectorAll('[data-search]').forEach(b => b.setAttribute('aria-expanded', 'false')); }
@@ -317,43 +329,23 @@ document.querySelectorAll('[data-search]').forEach(b => {
 $('change-addr').addEventListener('click', e => { e.stopPropagation(); openSearchPanel(); });
 document.addEventListener('click', e => { if (!e.target.closest('#hdr-drop')) closeSearchPanel(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !topDialog() && dropOpen()) { closeSearchPanel(); $('change-addr').focus(); } });
-document.querySelectorAll('input[name=occ-r]').forEach(r => r.addEventListener('change', () => { $('occ').value = r.value; $('occ').dispatchEvent(new Event('change')); syncChips(); }));
 async function searchFromBar() {
   const before = S.pt;
   if (document.body.classList.contains('results') && $('addr').value.trim()) { $('cards-hq').innerHTML = skeletons(3, 'lcard'); $('cards-br').innerHTML = ''; }
   await search();
   if (S.pt === before && S.results.length) renderCards();   // lookup failed: put the previous results back
-  if (S.pt && S.pt !== before) { closeSearchPanel(); updateSummaries(); }
+  if (S.pt && S.pt !== before) closeSearchPanel();
 }
 
-/* ---------------- filter chips and Filters dialog ---------------- */
-const DEF = { occ: 'inv', amt: '', 'f-fom': false, 'f-anycre': true };
-function syncChips() {
-  const occ = occNow();
-  document.querySelectorAll('.chip[data-occ]').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.occ === occ)));
-  document.querySelectorAll('.chip[data-type]').forEach(c => c.setAttribute('aria-pressed', String($(c.dataset.type).checked)));
-  const n = (occ !== DEF.occ) + ($('amt').value.trim() !== DEF.amt) + ['f-bank', 'f-thrift', 'f-cu'].filter(k => !$(k).checked).length + ($('f-fom').checked !== DEF['f-fom']) + ($('f-anycre').checked !== DEF['f-anycre']) + Object.entries(DEFW).some(([k, v]) => +$(k).value !== v);
-  $('fcount').textContent = n ? n : '';
-  $('btn-filters').setAttribute('aria-label', n ? `Filters, ${n} changed` : 'Filters');
-  $('f-apply').textContent = S.pt ? `Show ${S.results.length} lender${S.results.length === 1 ? '' : 's'}` : 'Done';
-}
-document.querySelectorAll('.chip[data-occ]').forEach(c => c.onclick = () => { if (occNow() === c.dataset.occ) return; $('occ').value = c.dataset.occ; $('occ').dispatchEvent(new Event('change')); updateSummaries(); syncChips(); });
-document.querySelectorAll('.chip[data-type]').forEach(c => c.onclick = () => { const b = $(c.dataset.type); b.checked = !b.checked; b.dispatchEvent(new Event('change')); syncChips(); });
-$('btn-filters').onclick = () => openDialog('filters');
-$('f-apply').onclick = () => closeDialog('filters');
-document.querySelectorAll('#amt, #f-bank, #f-thrift, #f-cu, #f-fom, #f-anycre').forEach(el => el.addEventListener('change', syncChips));
-$('f-reset').onclick = () => {
-  $('occ').value = DEF.occ; $('amt').value = DEF.amt; ['f-bank', 'f-thrift', 'f-cu'].forEach(k => $(k).checked = true);
-  $('f-fom').checked = DEF['f-fom']; $('f-anycre').checked = DEF['f-anycre'];
-  Object.entries(DEFW).forEach(([k, v]) => $(k).value = v);
-  rescoreAll(); updateSummaries(); syncChips(); run();
-};
+/* ---------------- loan amount box (results view; off until a number is applied) ---------------- */
+$('amt-form').addEventListener('submit', e => { e.preventDefault(); $('amt-clear').hidden = !$('amt').value.trim(); run(); });
+$('amt-clear').onclick = () => { $('amt').value = ''; $('amt-clear').hidden = true; run(); $('amt').focus(); };
 // second list: branch in the county, or within N miles (clicking the miles box switches to miles)
 document.querySelectorAll('input[name=brmode]').forEach(r => r.addEventListener('change', run));
 $('r-br').addEventListener('focus', () => { const m = document.querySelector('input[name=brmode][value=miles]'); if (!m.checked) { m.checked = true; run(); } });
 $('r-br').addEventListener('change', run);
 
-/* ---------------- placements (featured.json): never touch score, tier or result order ---------------- */
+/* ---------------- placements (featured.json): never touch score, grade or result order ---------------- */
 // Placeholder entries render only on a preview URL (?preview=1) or a local copy, so the public site shows no fake sponsors.
 const PREVIEW = new URLSearchParams(location.search).has('preview') || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 const PL = { all: null };
@@ -376,10 +368,10 @@ function placementCard(p) {
   const l = S.byId[p.id];
   if (!l) return '';
   return `<li class="card pcard">
-    <div class="card-image pc-tile t${l.tier}" aria-hidden="true"><span class="pc-letter">${l.tier}</span><span class="pc-sub">Tier</span></div>
+    <div class="card-image pc-tile g${l.grade === 'A+' ? 'Ap' : l.grade}" aria-hidden="true"><span class="pc-letter">${l.grade}</span><span class="pc-sub">Grade</span></div>
     <div class="card-body">
       ${isPaid(p) ? '<span class="tag">Sponsored</span>' : ''}
-      <button type="button" class="pc-main t-product" data-open="${l.id}" aria-label="${esc(nm(l))}${isPaid(p) ? ', sponsored' : ''}, tier ${l.tier}. Open details">${esc(nm(l))}</button>
+      <button type="button" class="pc-main t-product" data-open="${l.id}" aria-label="${esc(nm(l))}${isPaid(p) ? ', sponsored' : ''}, grade ${l.grade}. Open details">${esc(nm(l))}</button>
       <p class="small">${typeText(l)} · ${esc(l.ci)}, ${l.st}</p>
       ${p.blurb ? `<p class="pc-blurb">${esc(p.blurb)}</p>` : ''}
       ${p.profile_url ? `<a class="pc-profile small" href="${esc(p.profile_url)}" target="_blank" rel="noopener sponsored">View profile</a>` : ''}
@@ -411,10 +403,10 @@ function renderPlacements() {
 function renderSponsorSlot() {
   const p = S.st && activePlacements('sponsored').find(p => (p.states || []).includes(S.st)), l = p && S.byId[p.id];
   $('sponsor-slot').innerHTML = l ? `<div class="sslot"><span class="tag">Sponsored</span>
-    <button type="button" class="ss-main" data-open="${l.id}" aria-label="Sponsored: ${esc(nm(l))}, tier ${l.tier}. Open details">${tierTag(l)} <span class="t-product">${esc(nm(l))}</span></button>
+    <button type="button" class="ss-main" data-open="${l.id}" aria-label="Sponsored: ${esc(nm(l))}, grade ${l.grade}. Open details">${gradeTag(l)} <span class="t-product">${esc(nm(l))}</span></button>
     <p class="small">${typeText(l)} · ${esc(l.ci)}, ${l.st}${p.blurb ? ` · ${esc(p.blurb)}` : ''}</p>
     ${p.profile_url ? `<a class="small" href="${esc(p.profile_url)}" target="_blank" rel="noopener sponsored">View profile</a>` : ''}
-    <p class="small">Sponsored placement. It does not change any lender's score, tier or position in the ranked lists below.</p></div>` : '';
+    <p class="small">Sponsored placement. It does not change any lender's score, grade or position in the ranked lists below.</p></div>` : '';
 }
 document.querySelectorAll('.lrow-nav button').forEach(b => b.onclick = () => { const t = b.closest('.lrow').querySelector('.lrow-track'); t.scrollBy({ left: +b.dataset.dir * t.clientWidth * 0.9 }); });
 $('sp-state').onchange = e => setSponsorState(e.target.value);
@@ -456,10 +448,6 @@ window.matchMedia('(min-width: 900px)').addEventListener('change', e => { if (e.
 
 /* ---------------- wiring ---------------- */
 $('searchbar').addEventListener('submit', e => { e.preventDefault(); searchFromBar(); });
-document.querySelectorAll('#amt, #f-bank, #f-thrift, #f-cu, #f-fom, #f-anycre').forEach(el => el.addEventListener('change', run));
-document.querySelectorAll('.w input').forEach(el => el.addEventListener('input', () => { rescoreAll(); syncChips(); if (S.results.length) run(); }));
-$('occ').addEventListener('change', () => { rescoreAll(); run(); });
-$('w-reset').onclick = () => { Object.entries(DEFW).forEach(([k, v]) => $(k).value = v); rescoreAll(); syncChips(); run(); };
 $('csv').onclick = csv;
 if (location.hash === '#search') $('addr').focus();
 initMap(); load().catch(e => { $('addr-result').textContent = 'The lender data could not load (' + e.message + '). Try again later.'; console.error(e); });

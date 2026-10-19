@@ -42,7 +42,10 @@ Validation done: active-bank assets sum to $26.46T = FDIC Q2 2026 QBP; top-10 CU
 $0.01B; computed NPL/ROA/brokered ratios equal FDIC-published ratios exactly; NIM differs by design (avg assets vs
 avg earning assets, both shown).
 
-## 3. Research behind the scorecard (`docs/model_results.txt`, `docs/model_results.xlsx`)
+## 3. Research behind the scorecard
+
+2026-10-19: Matt replaced the scorecard on the site with a simple national quartile-points score on four headline
+measures (see CLAUDE.md, "National score"). The research below is kept for reference; it no longer sets the ranking. (`docs/model_results.txt`, `docs/model_results.xlsx`)
 
 Panel of 381,507 lender-quarters with a 4-quarter-ahead target (change in total CRE as % of assets; mergers with
 >30% asset jumps excluded; winsorized 1/99). Out-of-sample test trained through 2022Q2 targets, tested 2023Q3-2025Q2:

@@ -43,8 +43,8 @@
 <main id="main">
 <section id="landing">
   <div class="container search-hero">
-    <span class="kicker">Commercial real estate lenders</span>
-    <h1>Find the lenders most likely to finance your property</h1>
+    <span class="kicker" id="asof">Updated quarterly</span>
+    <h1>Find the bank or credit union most likely to finance your property</h1>
     <p class="lede">Enter the property address. You get the banks and credit unions based in its county first, then lenders from elsewhere in the state with a branch nearby, ranked from their public call reports.</p>
     <div id="search-home">
       <form id="searchbar" role="search" aria-label="Property address">
@@ -89,15 +89,14 @@
 </section>
 
 <section id="results-view" aria-label="Results">
-  <div id="chipbar" role="toolbar" aria-label="Quick filters">
-    <button type="button" id="btn-filters" class="chip" aria-haspopup="dialog"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-sliders"/></svg>Filters<span id="fcount" class="count"></span></button>
-    <span class="chip-sep" aria-hidden="true"></span>
-    <button type="button" class="chip" data-occ="inv" aria-pressed="true"><svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg>Investment</button>
-    <button type="button" class="chip" data-occ="oo" aria-pressed="false"><svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-check"/></svg>Owner-occupied</button>
-    <span class="chip-sep" aria-hidden="true"></span>
-    <button type="button" class="chip" data-type="f-bank" aria-pressed="true">Banks<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
-    <button type="button" class="chip" data-type="f-thrift" aria-pressed="true">Thrifts<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
-    <button type="button" class="chip" data-type="f-cu" aria-pressed="true">Credit unions<svg class="icon chip-x" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button>
+  <div id="chipbar" class="amtbar">
+    <form id="amt-form" class="amt-form" role="search" aria-label="Loan amount">
+      <label class="field-label" for="amt">Loan amount</label>
+      <input id="amt" class="input num" type="text" placeholder="Any amount" autocomplete="off" inputmode="decimal" aria-describedby="amt-help">
+      <button type="submit" class="button button-secondary button-sm">Apply</button>
+      <button type="button" id="amt-clear" class="button button-text" hidden>Clear</button>
+      <p id="amt-help" class="small">Hides lenders whose legal lending limit or remaining CRE capacity is below the loan. Dollars or $M.</p>
+    </form>
   </div>
   <div class="split">
     <section id="listpane" aria-label="Lenders">
@@ -147,44 +146,6 @@
   </div>
   <div class="container"><p class="small footer-base">A Querencia tool. Data: FDIC BankFind Suite and NCUA 5300 call reports. Map data © OpenStreetMap contributors.</p></div>
 </footer>
-
-<div id="filters" class="scrim hidden" role="dialog" aria-modal="true" aria-labelledby="f-title"><div class="modal">
-  <div class="modal-head"><h2 id="f-title" class="card-title">Filters</h2><button type="button" class="icon-button bare" data-close aria-label="Close filters"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>
-  <div class="modal-body">
-    <section class="fm-section">
-      <h3>Loan</h3>
-      <fieldset class="fm-set"><legend class="field-label">Loan use</legend>
-        <label class="check-row"><input type="radio" class="radio" name="occ-r" value="inv" checked><span>Investment property</span></label>
-        <label class="check-row"><input type="radio" class="radio" name="occ-r" value="oo"><span>Owner-occupied</span></label>
-      </fieldset>
-      <select id="occ" hidden><option value="inv">Investment property</option><option value="oo">Owner-occupied</option></select>
-      <div class="field fm-amt"><label class="field-label" for="amt">Loan amount</label><input id="amt" class="input num" type="text" placeholder="Any amount" autocomplete="off" inputmode="decimal" aria-describedby="amt-help">
-        <p class="field-help" id="amt-help">Drops lenders whose estimated lending limit (15% of capital) or remaining credit-union business-loan cap is below the request. Dollars or $M both work.</p></div>
-    </section>
-    <section class="fm-section">
-      <h3>Lender types</h3>
-      <label class="check-row"><input type="checkbox" class="checkbox" id="f-bank" checked><span>Commercial banks</span></label>
-      <label class="check-row"><input type="checkbox" class="checkbox" id="f-thrift" checked><span>Savings institutions and thrifts</span></label>
-      <label class="check-row"><input type="checkbox" class="checkbox" id="f-cu" checked><span>Credit unions</span></label>
-    </section>
-    <section class="fm-section">
-      <h3>Membership and CRE</h3>
-      <label class="check-row"><input type="checkbox" class="checkbox" id="f-fom"><span>Include membership-restricted credit unions<span class="small">Single and multiple common-bond credit unions lend only to their members</span></span></label>
-      <label class="check-row"><input type="checkbox" class="checkbox" id="f-anycre" checked><span>Only lenders with CRE on the books<span class="small">Hide lenders that report no commercial real estate loans</span></span></label>
-    </section>
-    <section class="fm-section">
-      <div class="fm-h"><h3>Scorecard weights</h3><button type="button" id="w-reset" class="button button-text">Reset weights</button></div>
-      <div class="w"><label for="w-mom">CRE momentum</label><input type="range" id="w-mom" min="0" max="50" value="25"><output for="w-mom">25</output></div>
-      <div class="w"><label for="w-fr">CRE franchise</label><input type="range" id="w-fr" min="0" max="50" value="25"><output for="w-fr">25</output></div>
-      <div class="w"><label for="w-gro">Deposit growth</label><input type="range" id="w-gro" min="0" max="50" value="15"><output for="w-gro">15</output></div>
-      <div class="w"><label for="w-qual">Asset quality</label><input type="range" id="w-qual" min="0" max="50" value="15"><output for="w-qual">15</output></div>
-      <div class="w"><label for="w-cap">Capital</label><input type="range" id="w-cap" min="0" max="50" value="10"><output for="w-cap">10</output></div>
-      <div class="w"><label for="w-mar">Margin (NIM)</label><input type="range" id="w-mar" min="0" max="50" value="10"><output for="w-mar">10</output></div>
-      <p class="field-help">Defaults follow what predicted next-year CRE growth 2016–2026 out of sample. Tiers A–E are national quintiles of the score. Penalties: above 400% CRE/capital (banks) or 90% of the business-loan cap (credit unions); no CRE on the books ×0.5.</p>
-    </section>
-  </div>
-  <div class="modal-foot"><button type="button" class="button button-text" id="f-reset">Reset all</button><button type="button" class="button button-primary" id="f-apply">Done</button></div>
-</div></div>
 
 <div id="drawer" class="scrim hidden" role="dialog" aria-modal="true" aria-label="Lender details"><div class="drawer wide">
   <div class="drawer-head"><span class="t-label">Lender details</span><button type="button" class="icon-button bare" data-close aria-label="Close lender details"><svg class="icon" aria-hidden="true"><use href="assets/icons.svg#i-x"/></svg></button></div>

@@ -19,17 +19,21 @@ the scorecard, and the roadmap.
   (1: lenders headquartered in the property's county; 2: lenders headquartered elsewhere in the state with a branch in
   the county or within N miles), each ordered by score, with the map on the right. Cards show only the headline
   metrics: loan/deposit, CRE lending capacity, tier 1 leverage (bank) / net worth ratio (CU), funding cost, and for
-  CUs CRE granted YTD + CRE rate. Loan use, amount, lender types, membership and weights live in the Filters modal.
+  CUs CRE granted YTD + CRE rate; a green box (`app.js::markTop`) marks the top third of the current search (both
+  lists) per figure. The only user filter is the loan amount box above the results (off by default): it hides lenders
+  whose lending limit or remaining CRE capacity is below the loan. Fixed rules: single/multiple common-bond credit
+  unions and lenders with no CRE are never listed. The hero kicker "Updated Qn YYYY" comes from `meta.json` `latest`.
   County matching: `cty` (lender HQ county) and branch index 10 come from `package_site.py`; `core.js::CTY` normalizes names.
 - Design system (from Brand Builder): `site/styles/tokens.css` holds every color, font and size; `base.css`,
   `components.css` (Stamped), `devices.css` (Press), `imagery.css` (Film), `pages.css` (layout), `app.css` (the two
   tools). No hex colors or font names outside `tokens.css`; map colors are read from the tokens in JS (`core.js::TOK`).
-  Tool screens get no graphic devices except section rules and kickers. Reference pages (not linked from the nav):
+  Tool screens get no graphic devices except section rules and kickers. The logo uses the button face (Matt's choice),
+  terracotta block; the property pin uses `--property-pin` (same terracotta) and sits above all lender pins. Reference pages (not linked from the nav):
   `styleguide.html`, `landing.html`, `article.html`, `tool.html`. Icons: Lucide sprite `site/assets/icons.svg`.
   Photo slots show the missing-image pattern until real photos are added under `site/assets/photos/`.
 - `site/featured.json` (hand-edited, committed): paid placements for the landing rows and the one "Sponsored" slot above
   results. `id` is the site id (`B` + FDIC cert, `C` + NCUA charter). Entries with `"placeholder": true` show only on
-  `?preview=1` or a local copy. Placements must never change score, tier or ranked order; paid ones always say "Sponsored".
+  `?preview=1` or a local copy. Placements must never change score, grade or ranked order; paid ones always say "Sponsored".
 - `.github/workflows/build.yml` runs the pipeline and deploys to GitHub Pages on `workflow_dispatch` and on the
   1st and 15th of each month. Source files are cached between runs under `raw/`.
 - `docs/` handoff notes, model results, research outputs. `test/smoke.mjs` Playwright smoke test.
@@ -69,13 +73,15 @@ the scorecard, and the roadmap.
   repossessed assets, autos included), bank 30-89 days past due. Optional FDIC fields are probed in `dl_fdic.py` and
   dropped if the API rejects them; `build_metrics.py` logs how many lenders have each field filled.
 
-## Scorecard (client-side, `core.js::scoreOf`)
+## National score (client-side, `core.js::rankAll`)
 
-Components are national percentiles computed in `package_site.py` (`sc` object per lender): CRE momentum, CRE
-franchise, deposit growth, asset quality, capital, margin. Default weights 25/25/15/15/10/10 came from the
-out-of-sample study in `docs/HANDOFF.md`. Penalties: >400% investment CRE/capital x0.85, >500% x0.70, construction
->150% x0.90, CU MBL cap 90-100% used x0.80, no CRE on the books x0.5. Tiers A-E = national quintiles of the score.
-Changing component definitions means editing both `package_site.py` (percentiles) and `core.js` (weights, Definitions text).
+Set by Matt on 2026-10-19, replacing the research-weighted scorecard (the old `sc`/`pen` fields are still produced by
+`package_site.py` but unused). Four measures, equal weight: loan to deposit (lower better), CRE lending capacity in
+dollars (higher better; bank `caprem`, CU `mblrem`, low-income CUs = no cap = best), capital ratio (bank `t1`, CU `nwr`,
+higher better), funding cost (lower better). Each is ranked against every lender in `lenders.json`: 4 points for the
+best quarter down to 1; capacity and capital ratio are ranked within charter (banks vs banks, CUs vs CUs); a missing
+figure earns 1. Score = sum, 4-16. Grades: A+ = 16, then A-D = national quarters of the score, ties to the higher grade.
+Lists sort by score, then the finer within-measure position. The lender details show the score and each measure's points.
 
 ## Conventions
 
